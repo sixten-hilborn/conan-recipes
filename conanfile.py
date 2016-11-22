@@ -16,14 +16,16 @@ class SDLConan(ConanFile):
             }
     default_options = '''shared=False'''
     generators = "cmake"
-    url="https://bitbucket.org/mutcoll/conan-sdl2-mixer"
-    requires = "SDL2/2.0.4@lasote/stable"
+ #   url="https://bitbucket.org/mutcoll/conan-sdl2-mixer" # TODO change
+    requires = "SDL2/2.0.5@lasote/stable"
     license="MIT"
 
     def config(self):
         del self.settings.compiler.libcxx 
 
     def source(self):
+        if self.settings.os == "Windows":
+            return
         zip_name = "%s.tar.gz" % self.folder
         download("https://www.libsdl.org/projects/SDL_mixer/release/%s" % zip_name, zip_name)
         unzip(zip_name)
@@ -35,7 +37,7 @@ class SDLConan(ConanFile):
             self.build_with_make()
 
     def build_copying_libs(self):
-        zip_name = "%s-win32-x64.zip" % self.folder
+        zip_name = "SDL2_mixer-devel-%s-VC.zip" % self.version
         download("https://www.libsdl.org/projects/SDL_mixer/release/%s" % zip_name, zip_name)
         unzip(zip_name)
 
@@ -124,11 +126,16 @@ class SDLConan(ConanFile):
         """ Define your conan structure: headers, libs and data. After building your
             project, this method is called to create a defined structure:
         """
-        self.copy(pattern="SDL_mixer.h", dst="include", src="%s" % self.folder, keep_path=False)
-        
-        # UNIX
+        self.copy(pattern="*SDL_mixer.h", dst="include/SDL2", src="%s" % self.folder, keep_path=False)
+
+        if self.settings.os == "Windows":
+            if self.settings.arch == "x86":
+                self.copy(pattern="*.lib", dst="lib", src="%s/lib/x86" % self.folder, keep_path=False)
+                self.copy(pattern="*.dll*", dst="lib", src="%s/lib/x86" % self.folder, keep_path=False)
+            else:
+                self.copy(pattern="*.lib", dst="lib", src="%s/lib/x64" % self.folder, keep_path=False)
+                self.copy(pattern="*.dll*", dst="lib", src="%s/lib/x64" % self.folder, keep_path=False)
         if not self.options.shared:
-            self.copy(pattern="*.a", dst="lib", src="%s" % self.folder, keep_path=False)
             self.copy(pattern="*.a", dst="lib", src="%s" % self.folder, keep_path=False)   
         else:
             self.copy(pattern="*.so*", dst="lib", src="%s" % self.folder, keep_path=False)
@@ -137,3 +144,4 @@ class SDLConan(ConanFile):
     def package_info(self):  
                 
         self.cpp_info.libs = ["SDL2_mixer"]
+        self.cpp_info.includedirs += ["include/SDL2"]
