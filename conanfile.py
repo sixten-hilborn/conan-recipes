@@ -39,5 +39,5 @@ class CgConan(ConanFile):
         self.copy("*.dll", dst="bin", keep_path=False)
 
     def package_info(self):
-        self.cpp_info.libs = ['cg']
+        self.cpp_info.libs = ['Cg']
 
