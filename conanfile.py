@@ -1,48 +1,67 @@
 from conans import ConanFile
 import os
-from conans.tools import download
+from conans.tools import get
 from conans.tools import unzip
 from conans import CMake
 
-class luaConan(ConanFile):
+class LuaConan(ConanFile):
     name = "lua"
-    version = "5.3.3"
+    version = "5.1.4"
     generators = "cmake"
     settings = "os", "arch", "compiler", "build_type"
-    url="http://github.com/dwerner/conan-lua"
-    license="https://www.lua.org/license.html"
-    exports="FindLua.cmake"
-    unzipped_name = "lua-%s" % version
-    zip_name = "%s.tar.gz" % unzipped_name
+    options = {
+        "shared": [True, False]
+    }
+    default_options = "shared=True"
+    url = "http://github.com/sixten-hilborn/conan-lua"
+    license = "https://www.lua.org/license.html"
+    exports = "FindLua.cmake"
+    folder = "lua-{0}".format(version)
+    zip_name = "{0}.tar.gz".format(version)
 
     def source(self):
-        url = "https://www.lua.org/ftp/%s" % self.zip_name
-        download(url, self.zip_name)
-        unzip(self.zip_name)
-        os.unlink(self.zip_name)
+        get("https://github.com/LuaDist/lua/archive/{0}".format(self.zip_name))
 
     def build(self):
-        self.target = {
-                "Macos":"macosx",
-                "Linux": "linux",
-                "Windows":"mingw"
-        }[str(self.settings.os)]
-        cmd = "cd %s && make %s local" % (self.unzipped_name, self.target)
-        self.run(cmd)
+        self.makedir('_build')
+        cmake = CMake(self.settings)
+        cd_build = 'cd _build'
+        options = (
+            '-DCMAKE_INSTALL_PREFIX=../_build/install '
+            '-DBUILD_TESTING=0 '
+            '-DLUA_BUILD_WLUA=0 ')
+        build_options = ''
+        self.run_and_print('%s && cmake "../%s" %s %s' % (cd_build, self.folder, cmake.command_line, options))
+        self.run_and_print("%s && cmake --build . --target install %s %s" % (cd_build, cmake.build_config, build_options))
 
     def package(self):
         self.copy("FindLua.cmake", ".", ".")
-        
+
         # Headers
-        self.copy(pattern="*.h", dst="include", src="%s/install/include" % self.unzipped_name, keep_path=True)
-        self.copy(pattern="*.hpp", dst="include", src="%s/install/include" % self.unzipped_name, keep_path=True)
+        self.copy(pattern="*.h", dst="include", src="_build/install/include", keep_path=True)
+        self.copy(pattern="*.hpp", dst="include", src="_build/install/include", keep_path=True)
 
         # libs
-        self.copy(pattern="*.a", dst="lib", src="%s/install/lib" % self.unzipped_name, keep_path=True)
-        self.copy(pattern="*.lib", dst="lib", src="%s/install/lib" % self.unzipped_name, keep_path=True)
+        self.copy(pattern="*.a", dst="lib", src="_build/install/lib", keep_path=False)
+        self.copy(pattern="*.so", dst="lib", src="_build/install/lib", keep_path=False)
+        self.copy(pattern="*.dylib", dst="lib", src="_build/install/lib", keep_path=False)
+        self.copy(pattern="*.lib", dst="lib", src="_build/install/lib", keep_path=False)
 
         # binaries
-        self.copy(pattern="lua*", dst="bin", src="%s/install/bin" % self.unzipped_name, keep_path=True)
+        self.copy(pattern="lua*", dst="bin", src="_build/install/bin", keep_path=False)
 
     def package_info(self):
-        self.cpp_info.libs = ['lua']
+        if self.options.shared:
+            self.cpp_info.libs = ['lua']
+        else:
+            self.cpp_info.libs = ['lua_static']
+
+    def makedir(self, path):
+        if self.settings.os == "Windows":
+            self.run("IF not exist {0} mkdir {0}".format(path))
+        else:
+            self.run("mkdir {0}".format(path))
+
+    def run_and_print(self, command):
+        self.output.info(command)
+        self.run(command)
