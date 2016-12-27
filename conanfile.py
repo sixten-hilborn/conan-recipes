@@ -41,8 +41,8 @@ class AlutConan(ConanFile):
         self.run_and_print("%s && cmake --build . %s %s" % (cd_build, cmake.build_config, build_options))
 
     def package(self):
-        lib_dir = "_build/{0}/lib".format(self.folder)
-        bin_dir = "_build/{0}/bin".format(self.folder)
+        lib_dir = "_build/lib"
+        bin_dir = "_build/bin"
         self.copy(pattern="*.h", dst="include/AL", src="{0}/include".format(self.folder))
         self.copy("*.lib", dst="lib", src=lib_dir, keep_path=False)
         self.copy("*.a", dst="lib", src=lib_dir, keep_path=False)
