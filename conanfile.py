@@ -1,7 +1,17 @@
+import os
+import fnmatch
 from conans import ConanFile
 from conans.tools import get, patch, replace_in_file
 from conans import CMake
 from multiprocessing import cpu_count
+
+
+def apply_patches(source, dest):
+    for root, dirnames, filenames in os.walk(source):
+        for filename in fnmatch.filter(filenames, '*.patch'):
+            patch_file = os.path.join(root, filename)
+            dest_path = os.path.join(dest, os.path.relpath(root, source))
+            patch(base_path=dest_path, patch_file=patch_file)
 
 
 class AlutConan(ConanFile):
@@ -16,7 +26,7 @@ class AlutConan(ConanFile):
         "shared": [True, False]
     }
     default_options = "shared=True"
-    exports = ["CMakeLists.txt"]
+    exports = ["CMakeLists.txt", "patches*"]
     requires = (
         "openal-soft/1.17.2@R3v3nX/testing"
     )
@@ -26,6 +36,7 @@ class AlutConan(ConanFile):
     def source(self):
         #get("https://github.com/vancegroup/freealut/archive/freealut_1_1_0.tar.gz")
         get("https://github.com/vancegroup/freealut/archive/master.zip")
+        apply_patches('patches', self.folder)
 
     def requirements(self):
         pass
@@ -43,7 +54,7 @@ class AlutConan(ConanFile):
     def package(self):
         lib_dir = "_build/lib"
         bin_dir = "_build/bin"
-        self.copy(pattern="*.h", dst="include/AL", src="{0}/include".format(self.folder))
+        self.copy(pattern="*.h", dst="include", src="{0}/include".format(self.folder))
         self.copy("*.lib", dst="lib", src=lib_dir, keep_path=False)
         self.copy("*.a", dst="lib", src=lib_dir, keep_path=False)
         self.copy("*.so", dst="lib", src=lib_dir, keep_path=False)
