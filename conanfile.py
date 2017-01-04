@@ -52,13 +52,14 @@ class AlutConan(ConanFile):
         self.run_and_print("%s && cmake --build . %s %s" % (cd_build, cmake.build_config, build_options))
 
     def package(self):
-        lib_dir = "_build/lib"
-        bin_dir = "_build/bin"
+        lib_dir = "_build"
+        bin_dir = "_build"
         self.copy(pattern="*.h", dst="include", src="{0}/include".format(self.folder))
         self.copy("*.lib", dst="lib", src=lib_dir, keep_path=False)
         self.copy("*.a", dst="lib", src=lib_dir, keep_path=False)
         self.copy("*.so", dst="lib", src=lib_dir, keep_path=False)
         self.copy("*.dll", dst="bin", src=bin_dir, keep_path=False)
+        self.copy("*.dylib", dst="bin", src=bin_dir, keep_path=False)
 
     def package_info(self):
         self.cpp_info.libs = [
