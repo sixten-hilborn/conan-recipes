@@ -39,13 +39,13 @@ class OdeConan(ConanFile):
         self.run_and_print("%s && cmake --build . %s %s" % (cd_build, cmake.build_config, build_options))
 
     def package(self):
-        lib_dir = "{0}/lib".format(self.folder)
         bin_dir = "{0}/bin".format(self.folder)
         self.copy(pattern="*.h", dst="include/ode", src="{0}/include/ode".format(self.folder))
-        self.copy("*.lib", dst="lib", src=lib_dir, keep_path=False)
-        self.copy("*.a", dst="lib", src=lib_dir, keep_path=False)
-        self.copy("*.so", dst="lib", src=lib_dir, keep_path=False)
+        self.copy("*.lib", dst="lib", src=self.folder, keep_path=False)
+        self.copy("*.a", dst="lib", src=self.folder, keep_path=False)
+        self.copy("*.so", dst="lib", src=self.folder, keep_path=False)
         self.copy("*.dll", dst="bin", src=bin_dir, keep_path=False)
+        self.copy("*.dylib", dst="bin", src=self.folder, keep_path=False)
 
     def package_info(self):
         if self.options.double_precision:
