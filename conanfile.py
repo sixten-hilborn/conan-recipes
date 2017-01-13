@@ -1,7 +1,6 @@
 from conans import ConanFile
 import os
-from conans.tools import get
-from conans.tools import unzip
+from conans.tools import get, patch
 from conans import CMake
 
 class LuaConan(ConanFile):
@@ -15,12 +14,13 @@ class LuaConan(ConanFile):
     default_options = "shared=True"
     url = "http://github.com/sixten-hilborn/conan-lua"
     license = "https://www.lua.org/license.html"
-    exports = "FindLua.cmake"
+    exports = "FindLua.cmake", "CMakeLists.txt.patch"
     folder = "lua-{0}".format(version)
     zip_name = "{0}.tar.gz".format(version)
 
     def source(self):
         get("https://github.com/LuaDist/lua/archive/{0}".format(self.zip_name))
+        patch(base_path=self.folder, patch_file="CMakeLists.txt.patch")
 
     def build(self):
         self.makedir('_build')
@@ -29,7 +29,8 @@ class LuaConan(ConanFile):
         options = (
             '-DCMAKE_INSTALL_PREFIX=../_build/install '
             '-DBUILD_TESTING=0 '
-            '-DLUA_BUILD_WLUA=0 ')
+            '-DLUA_BUILD_WLUA=0 '
+            '-DLUA_BUILD_AS_SHARED={0}'.format(1 if self.options.shared else 0))
         build_options = ''
         self.run_and_print('%s && cmake "../%s" %s %s' % (cd_build, self.folder, cmake.command_line, options))
         self.run_and_print("%s && cmake --build . --target install %s %s" % (cd_build, cmake.build_config, build_options))
@@ -43,12 +44,10 @@ class LuaConan(ConanFile):
 
         # libs
         self.copy(pattern="*.a", dst="lib", src="_build/install/lib", keep_path=False)
-        self.copy(pattern="*.so", dst="lib", src="_build/install/lib", keep_path=False)
+        self.copy(pattern="*.so*", dst="lib", src="_build/install/lib", keep_path=False)
         self.copy(pattern="*.dylib", dst="lib", src="_build/install/lib", keep_path=False)
         self.copy(pattern="*.lib", dst="lib", src="_build/install/lib", keep_path=False)
 
-        # binaries
-        self.copy(pattern="lua*", dst="bin", src="_build/install/bin", keep_path=False)
 
     def package_info(self):
         if self.options.shared:

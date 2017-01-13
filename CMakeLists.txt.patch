@@ -1,0 +1,66 @@
+--- CMakeLists.txt	Mon Oct 24 13:40:23 2011
++++ CMakeLists.txt	Fri Jan 13 06:11:20 2017
+@@ -39,11 +39,11 @@
+ set ( LUA_PATH_DEFAULT "./?.lua;${LUA_DIR}${LUA_LDIR}/?.lua;${LUA_DIR}${LUA_LDIR}/?/init.lua;./?/init.lua" )
+ set ( LUA_CPATH_DEFAULT "./?${LUA_MODULE_SUFFIX};${LUA_DIR}${LUA_CDIR}/?${LUA_MODULE_SUFFIX};${LUA_DIR}${LUA_CDIR}/loadall${LUA_MODULE_SUFFIX}" )
+ 
++option ( LUA_BUILD_AS_SHARED "Build Lua library as shared." ON )
+ if ( WIN32 AND NOT CYGWIN )
+   # Windows systems
+   option ( LUA_WIN "Windows specific build." ON )
+   option ( LUA_BUILD_WLUA "Build wLua interpretter without console output." ON)
+-  option ( LUA_BUILD_AS_DLL "Build Lua library as Dll." ON )
+   # Paths (Double escapes needed)
+   set ( LUA_DIRSEP "\\\\" )
+   string ( REPLACE "/" ${LUA_DIRSEP} LUA_DIR "${LUA_DIR}" )
+@@ -124,17 +124,20 @@
+ endif ()
+ 
+ ## BUILD
+-# Create dynamic library
+-add_library ( liblua SHARED ${SRC_LIB} ${LUA_DLL_RC} ${LUA_DEF} )
+-target_link_libraries ( liblua ${LIBS} )
+-set_target_properties ( liblua PROPERTIES OUTPUT_NAME lua CLEAN_DIRECT_OUTPUT 1 )
+-
+-# Create static library, this is needed to compile luac in the 5.1.x Lua series
+-add_library ( liblua_static STATIC ${SRC_LIB} )
+-target_link_libraries ( liblua_static ${LIBS} )
++if(LUA_BUILD_AS_SHARED)
++  # Create dynamic library
++  add_library ( liblua SHARED ${SRC_LIB} ${LUA_DLL_RC} ${LUA_DEF} )
++  target_link_libraries ( liblua ${LIBS} )
++  set_target_properties ( liblua PROPERTIES OUTPUT_NAME lua CLEAN_DIRECT_OUTPUT 1 )
++else()
++  # Create static library, this is needed to compile luac in the 5.1.x Lua series
++  add_library ( liblua_static STATIC ${SRC_LIB} )
++  target_link_libraries ( liblua_static ${LIBS} )
++  set_target_properties ( liblua_static PROPERTIES OUTPUT_NAME lua_static CLEAN_DIRECT_OUTPUT 1 )
++endif()
+ 
+-add_executable ( lua ${SRC_LUA} ${LUA_RC} )
+-target_link_libraries ( lua liblua )
++#add_executable ( lua ${SRC_LUA} ${LUA_RC} )
++#target_link_libraries ( lua liblua )
+ 
+ # On windows a variant of the lua interpreter without console output needs to be built
+ if(LUA_BUILD_WLUA)
+@@ -143,11 +146,15 @@
+   install_executable ( wlua )
+ endif()
+ 
+-add_executable ( luac ${SRC_LUAC} ${LUAC_RC} )
+-target_link_libraries ( luac liblua_static )
++#add_executable ( luac ${SRC_LUAC} ${LUAC_RC} )
++#target_link_libraries ( luac liblua_static )
+ 
+-install_executable ( lua luac )
+-install_library ( liblua )
++#install_executable ( lua luac )
++if(LUA_BUILD_AS_SHARED)
++  install_library ( liblua )
++else()
++  install_library ( liblua_static )
++end()
+ install_data ( README COPYRIGHT HISTORY )
+ install_lua_module ( strict etc/strict.lua )
+ install_header (src/lua.h src/lualib.h src/lauxlib.h etc/lua.hpp ${CMAKE_CURRENT_BINARY_DIR}/luaconf.h  )
