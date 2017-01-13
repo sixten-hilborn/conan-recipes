@@ -60,7 +60,7 @@
 +  install_library ( liblua )
 +else()
 +  install_library ( liblua_static )
-+end()
++endif()
  install_data ( README COPYRIGHT HISTORY )
  install_lua_module ( strict etc/strict.lua )
  install_header (src/lua.h src/lualib.h src/lauxlib.h etc/lua.hpp ${CMAKE_CURRENT_BINARY_DIR}/luaconf.h  )
