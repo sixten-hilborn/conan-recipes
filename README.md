@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/sixten-hilborn/conan-lua.svg?branch=master)](https://travis-ci.org/sixten-hilborn/conan-lua)
+[![Build Status](https://travis-ci.org/sixten-hilborn/conan-lua.svg?branch=release/5.1.4)](https://travis-ci.org/sixten-hilborn/conan-lua)
 [![Build status](https://ci.appveyor.com/api/projects/status/clrxf3djdhnw0xr2?svg=true)](https://ci.appveyor.com/project/sixten-hilborn/conan-lua)
 
 # conan-lua
