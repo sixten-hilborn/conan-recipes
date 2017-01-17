@@ -7,7 +7,7 @@ environment:
     CONAN_UPLOAD: 1
     CONAN_REFERENCE: "lua/5.1.4"
     CONAN_USERNAME: "hilborn"
-    CONAN_CHANNEL: "ci"
+    CONAN_CHANNEL: "stable"
     CONAN_TOTAL_PAGES: 20
     
     matrix:
