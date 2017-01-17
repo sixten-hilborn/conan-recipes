@@ -1,6 +1,16 @@
 --- CMakeLists.txt	Mon Oct 24 13:40:23 2011
-+++ CMakeLists.txt	Fri Jan 13 06:11:20 2017
-@@ -39,11 +39,11 @@
++++ CMakeLists.txt	Tue Jan 17 06:36:38 2017
+@@ -8,6 +8,9 @@
+ cmake_minimum_required ( VERSION 2.6 )
+ include ( dist.cmake )
+ 
++include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
++CONAN_BASIC_SETUP()
++
+ ## CONFIGURATION
+ # Default configuration (we assume POSIX by default)
+ set ( LUA_PATH "LUA_PATH" CACHE STRING "Environment variable to use as package.path." )
+@@ -39,11 +42,11 @@
  set ( LUA_PATH_DEFAULT "./?.lua;${LUA_DIR}${LUA_LDIR}/?.lua;${LUA_DIR}${LUA_LDIR}/?/init.lua;./?/init.lua" )
  set ( LUA_CPATH_DEFAULT "./?${LUA_MODULE_SUFFIX};${LUA_DIR}${LUA_CDIR}/?${LUA_MODULE_SUFFIX};${LUA_DIR}${LUA_CDIR}/loadall${LUA_MODULE_SUFFIX}" )
  
@@ -13,7 +23,7 @@
    # Paths (Double escapes needed)
    set ( LUA_DIRSEP "\\\\" )
    string ( REPLACE "/" ${LUA_DIRSEP} LUA_DIR "${LUA_DIR}" )
-@@ -124,17 +124,20 @@
+@@ -124,17 +127,20 @@
  endif ()
  
  ## BUILD
@@ -44,7 +54,7 @@
  
  # On windows a variant of the lua interpreter without console output needs to be built
  if(LUA_BUILD_WLUA)
-@@ -143,11 +146,15 @@
+@@ -143,11 +149,15 @@
    install_executable ( wlua )
  endif()
  

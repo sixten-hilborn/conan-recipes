@@ -5,6 +5,7 @@ from conans import CMake
 
 class LuaConan(ConanFile):
     name = "lua"
+    description = "C API of the programming language Lua"
     version = "5.1.4"
     generators = "cmake"
     settings = "os", "arch", "compiler", "build_type"
