@@ -57,7 +57,7 @@ class LuaConan(ConanFile):
         else:
             self.cpp_info.libs = ['lua_static']
             if self.settings.compiler == 'gcc':
-                self.cpp_info.libs.append('m')
+                self.cpp_info.libs.extend(['m', 'dl'])
 
     def makedir(self, path):
         if self.settings.os == "Windows":
