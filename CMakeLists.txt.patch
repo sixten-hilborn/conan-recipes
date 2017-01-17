@@ -1,10 +1,10 @@
 --- CMakeLists.txt	Mon Oct 24 13:40:23 2011
-+++ CMakeLists.txt	Tue Jan 17 06:36:38 2017
++++ CMakeLists.txt	Tue Jan 17 06:48:33 2017
 @@ -8,6 +8,9 @@
  cmake_minimum_required ( VERSION 2.6 )
  include ( dist.cmake )
  
-+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
++include(conanbuildinfo.cmake)
 +CONAN_BASIC_SETUP()
 +
  ## CONFIGURATION
