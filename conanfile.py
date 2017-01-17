@@ -48,6 +48,7 @@ class LuaConan(ConanFile):
         self.copy(pattern="*.so*", dst="lib", src="_build/install/lib", keep_path=False)
         self.copy(pattern="*.dylib", dst="lib", src="_build/install/lib", keep_path=False)
         self.copy(pattern="*.lib", dst="lib", src="_build/install/lib", keep_path=False)
+        self.copy(pattern="*.dll", dst="bin", src="_build/install/bin", keep_path=False)
 
 
     def package_info(self):
@@ -55,6 +56,8 @@ class LuaConan(ConanFile):
             self.cpp_info.libs = ['lua']
         else:
             self.cpp_info.libs = ['lua_static']
+            if self.settings.compiler == 'gcc':
+                self.cpp_info.libs.append('math')
 
     def makedir(self, path):
         if self.settings.os == "Windows":
