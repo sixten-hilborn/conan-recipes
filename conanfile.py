@@ -19,6 +19,9 @@ class LuaConan(ConanFile):
     folder = "lua-{0}".format(version)
     zip_name = "{0}.tar.gz".format(version)
 
+    def configure(self):
+        del self.settings.compiler.libcxx
+
     def source(self):
         get("https://github.com/LuaDist/lua/archive/{0}".format(self.zip_name))
         patch(base_path=self.folder, patch_file="CMakeLists.txt.patch")
