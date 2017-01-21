@@ -22,11 +22,13 @@ class CgConan(ConanFile):
             self.installed = (retcode == 0)
             if self.installed:
                 return
-            installer.install("libc6")
-            installer.install("freeglut3")
             if self.settings.arch == 'x86':
+                installer.install("libc6:i386")
+                installer.install("freeglut3:i386")
                 download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86.deb", "Cg.deb")
             elif self.settings.arch == 'x86_64':
+                installer.install("libc6:amd64")
+                installer.install("freeglut3:amd64")
                 download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86_64.deb", "Cg.deb")
             self.run("sudo dpkg -i Cg.deb")
 
@@ -61,7 +63,9 @@ class CgConan(ConanFile):
     def source_mac(self):
         download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012.dmg", "Cg.dmg")
         self.run("sudo hdiutil attach Cg.dmg")
-        self.run("find /Volume")
+        self.run("find /Volumes/Cg-3.1.0013")
+        # self.run("sudo installer -package /Volumes/<image>/<image>.pkg -target /")
+        self.run("sudo hdiutil detach /Volumes/Cg-3.1.0013")
 
     def build(self):
         pass
