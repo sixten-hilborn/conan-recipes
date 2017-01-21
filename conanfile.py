@@ -22,6 +22,8 @@ class CgConan(ConanFile):
             self.installed = (retcode == 0)
             if self.installed:
                 return
+            installer.install("libc6")
+            installer.install("freeglut3")
             if self.settings.arch == 'x86':
                 download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86.deb", "Cg.deb")
             elif self.settings.arch == 'x86_64':
