@@ -59,7 +59,7 @@ class AlutConan(ConanFile):
         self.copy("*.a", dst="lib", src=lib_dir, keep_path=False)
         self.copy("*.so", dst="lib", src=lib_dir, keep_path=False)
         self.copy("*.dll", dst="bin", src=bin_dir, keep_path=False)
-        self.copy("*.dylib", dst="bin", src=bin_dir, keep_path=False)
+        self.copy("*.dylib", dst="lib", src=bin_dir, keep_path=False)
 
     def package_info(self):
         self.cpp_info.libs = [
