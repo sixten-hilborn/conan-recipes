@@ -1,6 +1,7 @@
 from conans import ConanFile
 from conans.tools import get, download, SystemPackageTool
 import os
+import shutil
 
 class CgConan(ConanFile):
     name = "Cg"
@@ -26,12 +27,15 @@ class CgConan(ConanFile):
                 self.source_linux()
         elif self.settings.os == "Windows":
             self.source_windows()
+        elif self.settings.os == "Macos":
+            self.source_mac()
 
     def source_linux(self):
         if self.settings.arch == 'x86':
             get("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86.tgz")
         elif self.settings.arch == 'x86_64':
             get("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86_64.tgz")
+        shutil.rmtree("usr/local")
 
     def source_windows(self):
         def get_cg(path):
@@ -44,6 +48,11 @@ class CgConan(ConanFile):
         else:
             get_cg('bin64/cg.dll')
             get_cg('lib64/cg.lib')
+
+    def source_mac(self):
+        download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012.dmg", "Cg.dmg")
+        self.run("sudo hdiutil attach Cg.dmg")
+        self.run("find /Volume")
 
     def build(self):
         pass
