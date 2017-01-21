@@ -63,8 +63,7 @@ class CgConan(ConanFile):
     def source_mac(self):
         download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012.dmg", "Cg.dmg")
         self.run("sudo hdiutil attach Cg.dmg")
-        self.run("find /Volumes/Cg-3.1.0013")
-        # self.run("sudo installer -package /Volumes/<image>/<image>.pkg -target /")
+        self.run("sudo '/Volumes/Cg-3.1.0013/Cg-3.1.0013.app/Contents/Resources/Installer Items/install.sh' /")
         self.run("sudo hdiutil detach /Volumes/Cg-3.1.0013")
 
     def build(self):
