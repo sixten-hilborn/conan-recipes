@@ -12,10 +12,15 @@ class CgConan(ConanFile):
     url = "http://github.com/sixten-hilborn/conan-cg"
     license = "https://bitbucket.org/cabalistic/ogredeps/src/bfc878e4fd9a3e026de73114cf42abe2787461b8/src/Cg/license.txt"
 
+    def system_requirements(self):
+        if self.settings.os == "Linux":
+            installer = SystemPackageTool()
+            installer.update()
+            installer.install("nvidia-cg-toolkit")
+
     def source(self):
         if self.settings.os == "Linux":
-            self.output.warn("Using apt-get to install Cg")
-            self.run("sudo apt-get update && sudo apt-get install -y nvidia-cg-toolkit")
+            pass
         elif self.settings.os == "Windows":
             def get_cg(path):
                 filename = os.path.basename(path)
