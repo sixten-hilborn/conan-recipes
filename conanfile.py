@@ -20,6 +20,13 @@ class CgConan(ConanFile):
             installer.update()
             retcode = installer.install("nvidia-cg-toolkit")
             self.installed = (retcode == 0)
+            if self.installed:
+                return
+            if self.settings.arch == 'x86':
+                download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86.deb", "Cg.deb")
+            elif self.settings.arch == 'x86_64':
+                download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86_64.deb", "Cg.deb")
+            self.run("sudo dpkg -i Cg.deb")
 
     def source(self):
         if self.settings.os == "Linux":
