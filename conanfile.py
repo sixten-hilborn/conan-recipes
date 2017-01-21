@@ -1,6 +1,5 @@
 from conans import ConanFile
-from conans.tools import download
-from conans import CMake
+from conans.tools import download, SystemPackageTool
 import os
 
 class CgConan(ConanFile):
