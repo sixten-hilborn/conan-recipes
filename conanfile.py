@@ -28,7 +28,7 @@ class AlutConan(ConanFile):
     default_options = "shared=True"
     exports = ["CMakeLists.txt", "patches*"]
     requires = (
-        "openal-soft/1.17.2@R3v3nX/testing"
+        "openal-soft/1.17.2@hilborn/stable"
     )
     url = "http://github.com/sixten-hilborn/conan-alut"
     license = "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
