@@ -11,31 +11,21 @@ class CgConan(ConanFile):
     settings = "os", "arch"
     url = "http://github.com/sixten-hilborn/conan-cg"
     license = "https://bitbucket.org/cabalistic/ogredeps/src/bfc878e4fd9a3e026de73114cf42abe2787461b8/src/Cg/license.txt"
-    installed = False
 
     def system_requirements(self):
-        # TODO: Decide if this should be used or just download binaries manually in source()
         if self.settings.os == "Linux":
             installer = SystemPackageTool()
-            installer.update()
-            retcode = installer.install("nvidia-cg-toolkit")
-            self.installed = (retcode == 0)
-            if self.installed:
-                return
+            #installer.install("nvidia-cg-toolkit")
             if self.settings.arch == 'x86':
                 installer.install("libc6:i386")
                 installer.install("freeglut3:i386")
-                download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86.deb", "Cg.deb")
             elif self.settings.arch == 'x86_64':
                 installer.install("libc6:amd64")
                 installer.install("freeglut3:amd64")
-                download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86_64.deb", "Cg.deb")
-            self.run("sudo dpkg -i Cg.deb")
 
     def source(self):
         if self.settings.os == "Linux":
-            if not self.installed:
-                self.source_linux()
+            self.source_linux()
         elif self.settings.os == "Windows":
             self.source_windows()
         elif self.settings.os == "Macos":
