@@ -24,6 +24,9 @@ class CgConan(ConanFile):
                 installer.install("freeglut3:amd64")
 
     def source(self):
+        pass
+
+    def build(self):
         if self.settings.os == "Linux":
             self.source_linux()
         elif self.settings.os == "Windows":
@@ -55,9 +58,6 @@ class CgConan(ConanFile):
         self.run("sudo hdiutil attach Cg.dmg")
         self.run("sudo '/Volumes/Cg-3.1.0013/Cg-3.1.0013.app/Contents/Resources/Installer Items/install.sh' /")
         self.run("sudo hdiutil detach /Volumes/Cg-3.1.0013")
-
-    def build(self):
-        pass
 
     def package(self):
         self.copy(pattern="*.h", dst="include/Cg", keep_path=False)
