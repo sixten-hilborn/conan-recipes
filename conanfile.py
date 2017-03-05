@@ -56,14 +56,11 @@ class CgConan(ConanFile):
     def source_mac(self):
         download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012.dmg", "Cg.dmg")
         self.run("sudo hdiutil attach Cg.dmg")
-        self.run('tar -xvf "{0}" -C "{1}" || true'.format(
-            '/Volumes/Cg-3.1.0013/Cg-3.1.0013.app/Contents/Resources/Installer Items/NVIDIA_Cg.tgz',
-            self.conanfile_directory
-        ))
+        self.run('tar -xvf "/Volumes/Cg-3.1.0013/Cg-3.1.0013.app/Contents/Resources/Installer Items/NVIDIA_Cg.tgz" || true')
         self.run("sudo hdiutil detach /Volumes/Cg-3.1.0013")
         lib_path = 'Library/Frameworks/Cg.framework/Versions/1.0'
-        self.run('mv "{0}" include'.format(lib_path + '/Headers'))
-        self.run('mv "{0}" libCg.dylib'.format(lib_path + '/Cg'))
+        self.run('cp -r "{0}" include'.format(lib_path + '/Headers'))
+        self.run('cp "{0}" libCg.dylib'.format(lib_path + '/Cg'))
 
     def package(self):
         self.copy(pattern="*.h", dst="include/Cg", keep_path=False)
