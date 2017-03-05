@@ -32,7 +32,7 @@ class CeguiConan(ConanFile):
         "freeimage/3.17.0@hilborn/stable",
         "freetype/2.6.3@hilborn/stable",
         "OGRE/1.9.0@hilborn/stable",
-	"OIS/1.3.0@hilborn/stable",
+	"OIS/1.3@hilborn/stable",
         "libxml2/2.9.3@lasote/stable"
         #"SDL2/2.0.5@lasote/stable",
         #"SDL2_image/2.0.1@lasote/stable"
