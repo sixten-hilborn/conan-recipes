@@ -61,7 +61,7 @@ class CgConan(ConanFile):
         lib_path = 'Library/Frameworks/Cg.framework/Versions/1.0'
         self.run('cp -r "{0}" include'.format(lib_path + '/Headers'))
         self.run('cp "{0}" libCg.dylib'.format(lib_path + '/Cg'))
-        self.run('chmod a+rw . -R')
+        self.run('chmod a+rw -R .')
 
     def package(self):
         self.copy(pattern="*.h", dst="include/Cg", keep_path=False)
