@@ -3,7 +3,7 @@ from conans.tools import os_info
 import platform
 
 if __name__ == "__main__":
-    builder = ConanMultiPackager(args="--build missing")
+    builder = ConanMultiPackager(args="--build missing --build CEGU")
     builder.add_common_builds(shared_option_name="CEGUI:shared", pure_c=False)
     # Disable VS2010 because of missing DirectX stuff
     # Disable x86 Linux builds (OGRE x86 package does not work at the moment)
