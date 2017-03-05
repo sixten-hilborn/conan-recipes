@@ -65,6 +65,8 @@ class CgConan(ConanFile):
         self.copy("*.a", dst="lib", keep_path=False)
         self.copy("*.so*", dst="lib", keep_path=False, links=True)
         self.copy("*.dll", dst="bin", keep_path=False)
+        if self.settings.os == 'Macos':
+            self.copy(pattern="*.h", dst="include/Cg", src='/Library/Frameworks/Cg.framework/Versions/1.0/Headers', keep_path=False)
 
     def package_info(self):
         if self.settings.os == 'Macos':
