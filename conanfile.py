@@ -22,8 +22,6 @@ class CgConan(ConanFile):
             elif self.settings.arch == 'x86_64':
                 installer.install("libc6:amd64")
                 installer.install("freeglut3:amd64")
-        elif self.settings.os == "Macos":
-            self.install_mac()
 
     def source(self):
         pass
@@ -33,6 +31,8 @@ class CgConan(ConanFile):
             self.source_linux()
         elif self.settings.os == "Windows":
             self.source_windows()
+        elif self.settings.os == "Macos":
+            self.source_mac()
 
     def source_linux(self):
         if self.settings.arch == 'x86':
@@ -53,25 +53,26 @@ class CgConan(ConanFile):
             get_cg('bin64/cg.dll')
             get_cg('lib64/cg.lib')
 
-    def install_mac(self):
+    def source_mac(self):
         download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012.dmg", "Cg.dmg")
         self.run("sudo hdiutil attach Cg.dmg")
-        self.run("sudo tar -xvf '/Volumes/Cg-3.1.0013/Cg-3.1.0013.app/Contents/Resources/Installer Items/NVIDIA_Cg.tgz' -C / || true")
+        self.run('tar -xvf "{0}" -C "{1}" || true'.format(
+            '/Volumes/Cg-3.1.0013/Cg-3.1.0013.app/Contents/Resources/Installer Items/NVIDIA_Cg.tgz',
+            self.conanfile_directory
+        ))
         self.run("sudo hdiutil detach /Volumes/Cg-3.1.0013")
+        lib_path = 'Library/Frameworks/Cg.framework/Versions/1.0'
+        self.run('mv "{0}" include'.format(lib_path + '/Headers'))
+        self.run('mv "{0}" libCg.dylib'.format(lib_path + '/Cg'))
 
     def package(self):
         self.copy(pattern="*.h", dst="include/Cg", keep_path=False)
         self.copy("*.lib", dst="lib", keep_path=False)
         self.copy("*.a", dst="lib", keep_path=False)
         self.copy("*.so*", dst="lib", keep_path=False, links=True)
+        self.copy("*.dylib", dst="lib", keep_path=False)
         self.copy("*.dll", dst="bin", keep_path=False)
-        if self.settings.os == 'Macos':
-            self.copy(pattern="*.h", dst="include/Cg", src='/Library/Frameworks/Cg.framework/Versions/1.0/Headers', keep_path=False)
 
     def package_info(self):
-        if self.settings.os == 'Macos':
-            self.cpp_info.exelinkflags.append("-framework Cg")
-            self.cpp_info.sharedlinkflags = self.cpp_info.exelinkflags
-        else:
-            self.cpp_info.libs = ['Cg']
+        self.cpp_info.libs = ['Cg']
 
