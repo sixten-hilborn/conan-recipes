@@ -46,7 +46,7 @@ class OdeConan(ConanFile):
         self.copy("*.a", dst="lib", src=self.folder, keep_path=False)
         self.copy("*.so", dst="lib", src=self.folder, keep_path=False)
         self.copy("*.dll", dst="bin", src=bin_dir, keep_path=False)
-        self.copy("*.dylib", dst="bin", src=self.folder, keep_path=False)
+        self.copy("*.dylib", dst="lib", src=self.folder, keep_path=False)
 
     def package_info(self):
         if self.options.double_precision:
