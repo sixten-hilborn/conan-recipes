@@ -22,6 +22,8 @@ class CgConan(ConanFile):
             elif self.settings.arch == 'x86_64':
                 installer.install("libc6:amd64")
                 installer.install("freeglut3:amd64")
+        elif self.settings.os == "Macos":
+            self.install_mac()
 
     def source(self):
         pass
@@ -31,8 +33,6 @@ class CgConan(ConanFile):
             self.source_linux()
         elif self.settings.os == "Windows":
             self.source_windows()
-        elif self.settings.os == "Macos":
-            self.source_mac()
 
     def source_linux(self):
         if self.settings.arch == 'x86':
@@ -53,10 +53,10 @@ class CgConan(ConanFile):
             get_cg('bin64/cg.dll')
             get_cg('lib64/cg.lib')
 
-    def source_mac(self):
+    def install_mac(self):
         download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012.dmg", "Cg.dmg")
         self.run("sudo hdiutil attach Cg.dmg")
-        self.run("sudo '/Volumes/Cg-3.1.0013/Cg-3.1.0013.app/Contents/Resources/Installer Items/install.sh' /")
+        self.run("sudo tar -xvf '/Volumes/Cg-3.1.0013/Cg-3.1.0013.app/Contents/Resources/Installer Items/NVIDIA_Cg.tgz' -C /")
         self.run("sudo hdiutil detach /Volumes/Cg-3.1.0013")
 
     def package(self):
