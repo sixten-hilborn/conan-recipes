@@ -56,7 +56,7 @@ class CgConan(ConanFile):
     def install_mac(self):
         download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012.dmg", "Cg.dmg")
         self.run("sudo hdiutil attach Cg.dmg")
-        self.run("sudo tar -xvf '/Volumes/Cg-3.1.0013/Cg-3.1.0013.app/Contents/Resources/Installer Items/NVIDIA_Cg.tgz' -C /")
+        self.run("sudo tar -xvf '/Volumes/Cg-3.1.0013/Cg-3.1.0013.app/Contents/Resources/Installer Items/NVIDIA_Cg.tgz' -C / || true")
         self.run("sudo hdiutil detach /Volumes/Cg-3.1.0013")
 
     def package(self):
@@ -67,5 +67,9 @@ class CgConan(ConanFile):
         self.copy("*.dll", dst="bin", keep_path=False)
 
     def package_info(self):
-        self.cpp_info.libs = ['Cg']
+        if self.settings.os == 'Macos':
+            self.cpp_info.exelinkflags.append("-framework Cg")
+            self.cpp_info.sharedlinkflags = self.cpp_info.exelinkflags
+        else:
+            self.cpp_info.libs = ['Cg']
 
