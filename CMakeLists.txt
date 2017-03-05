@@ -161,3 +161,7 @@ else()
 endif()
 add_definitions(-D_USE_MATH_DEFINES -D_OU_NAMESPACE=odeou)
 add_library(${LIB_NAME} ${Ode_SOURCES})
+
+if(APPLE)
+	set_target_properties(${LIB_NAME} PROPERTIES LINK_FLAGS "-framework Carbon")
+endif ()

@@ -62,3 +62,6 @@ class OdeConan(ConanFile):
 
         if self.settings.os == 'Linux':
             self.cpp_info.libs.append('pthread')
+        elif self.settings.os == 'Macos' or self.settings.os == 'iOS':
+            self.cpp_info.exelinkflags.append("-framework Carbon")
+            self.cpp_info.sharedlinkflags = self.cpp_info.exelinkflags
