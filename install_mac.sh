@@ -12,4 +12,6 @@ sudo sh "$installer_path/install.sh" /
 sudo hdiutil detach /Volumes/Cg-3.1.0013
 
 echo "Installed framework:"
-find /Library/Frameworks/Cg.framework
+find /Library/Frameworks/Cg.framework | while read line; do
+    ls -l "$line"
+done
