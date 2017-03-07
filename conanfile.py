@@ -11,6 +11,7 @@ class CgConan(ConanFile):
     settings = "os", "arch"
     url = "http://github.com/sixten-hilborn/conan-cg"
     license = "https://bitbucket.org/cabalistic/ogredeps/src/bfc878e4fd9a3e026de73114cf42abe2787461b8/src/Cg/license.txt"
+    exports = ["install_mac.sh"]
 
     def system_requirements(self):
         if self.settings.os == "Linux":
@@ -55,15 +56,7 @@ class CgConan(ConanFile):
 
     def source_mac(self):
         download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012.dmg", "Cg.dmg")
-        self.run("sudo hdiutil attach Cg.dmg")
-        self.run("mkdir cg")
-        self.run('tar -xvf "/Volumes/Cg-3.1.0013/Cg-3.1.0013.app/Contents/Resources/Installer Items/NVIDIA_Cg.tgz" -C cg || true')
-        self.run("sudo hdiutil detach /Volumes/Cg-3.1.0013")
-        lib_path = 'cg/Library/Frameworks/Cg.framework/Versions/1.0'
-        self.run('cp -r "{0}" include'.format(lib_path + '/Headers'))
-        self.run('cp "{0}" libCg.dylib'.format(lib_path + '/Cg'))
-        self.run('chmod -R a+rw .')
-        shutil.rmtree("cg")
+        self.run("./install_mac.sh")
 
     def package(self):
         self.copy(pattern="*.h", dst="include/Cg", keep_path=False)
@@ -72,7 +65,12 @@ class CgConan(ConanFile):
         self.copy("*.so*", dst="lib", keep_path=False, links=True)
         self.copy("*.dylib", dst="lib", keep_path=False)
         self.copy("*.dll", dst="bin", keep_path=False)
+        if self.settings.os == 'Macos':
+            self.copy(pattern="*.h", dst="include/Cg", src="/Library/Frameworks/Cg.framework/Versions/1.0/Headers", keep_path=False)
 
     def package_info(self):
-        self.cpp_info.libs = ['Cg']
-
+        if self.settings.os == 'Macos':
+            self.cpp_info.exelinkflags.append("-framework Cg")
+            self.cpp_info.sharedlinkflags = self.cpp_info.exelinkflags
+        else:
+            self.cpp_info.libs = ['Cg']
