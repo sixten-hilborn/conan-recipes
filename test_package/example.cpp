@@ -3,6 +3,8 @@
 
 int main(int argc, char *argv[])
 {
-	CEGUI::System::getSingleton();
+	std::cout
+		<< "CEGUI version:" << std::endl
+		<< CEGUI::System::getVerboseVersion().c_str() << std::endl;
 	return 0;
 }
