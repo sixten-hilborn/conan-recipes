@@ -40,6 +40,8 @@ class CeguiConan(ConanFile):
     url = "http://github.com/sixten-hilborn/conan-cegui"
     license = "https://opensource.org/licenses/mit-license.php"
 
+    short_paths = True
+
     def source(self):
         get("https://bitbucket.org/cegui/cegui/downloads/cegui-0.8.7.zip")
         apply_patches('patches', self.folder)
