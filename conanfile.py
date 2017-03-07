@@ -56,7 +56,7 @@ class CgConan(ConanFile):
 
     def source_mac(self):
         download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012.dmg", "Cg.dmg")
-        self.run("bash ./install_mac.sh")
+        self.run("bash -ex ./install_mac.sh")
 
     def package(self):
         self.copy(pattern="*.h", dst="include/Cg", keep_path=False)

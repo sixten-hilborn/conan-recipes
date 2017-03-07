@@ -10,3 +10,6 @@ installer_path="/Volumes/Cg-3.1.0013/Cg-3.1.0013.app/Contents/Resources/Installe
 sudo cp "$installer_path/NVIDIA_Cg.tgz" /
 sudo sh "$installer_path/install.sh" /
 sudo hdiutil detach /Volumes/Cg-3.1.0013
+
+echo "Installed framework:"
+find /Library/Frameworks/Cg.framework
