@@ -32,7 +32,7 @@ class CeguiConan(ConanFile):
         "freeimage/3.17.0@hilborn/stable",
         "freetype/2.6.3@hilborn/stable",
         "OGRE/1.9.0@hilborn/stable",
-	"OIS/1.3@hilborn/stable",
+        "OIS/1.3@hilborn/stable",
         "libxml2/2.9.3@lasote/stable"
         #"SDL2/2.0.5@lasote/stable",
         #"SDL2_image/2.0.1@lasote/stable"
@@ -51,25 +51,20 @@ class CeguiConan(ConanFile):
             self.requires("OIS/1.3@hilborn/stable")
 
     def build(self):
-        self.makedir('_build')
         cmake = CMake(self.settings)
-        cd_build = 'cd _build'
-        options = (
-            '-DCEGUI_SAMPLES_ENABLED=0 '
-            '-DCEGUI_BUILD_PYTHON_MODULES=0 '
-            '-DCEGUI_BUILD_APPLICATION_TEMPLATES=0 '
-            '-DCEGUI_HAS_FREETYPE=1 '
-            '-DCEGUI_OPTION_DEFAULT_IMAGECODEC=FreeImageCodec '
-            '-DCEGUI_BUILD_IMAGECODEC_FREEIMAGE=1 ')
-        build_options = '-- -j{0}'.format(cpu_count()) if self.settings.compiler == 'gcc' else ''
-        self.run_and_print('%s && cmake .. %s %s' % (cd_build, cmake.command_line, options))
-        self.run_and_print("%s && cmake --build . %s %s" % (cd_build, cmake.build_config, build_options))
-
-    def makedir(self, path):
-        if self.settings.os == "Windows":
-            self.run("IF not exist {0} mkdir {0}".format(path))
-        else:
-            self.run("mkdir {0}".format(path))
+        options = {
+            'CEGUI_SAMPLES_ENABLED': False,
+            'CEGUI_BUILD_PYTHON_MODULES': False,
+            'CEGUI_BUILD_APPLICATION_TEMPLATES': False,
+            'CEGUI_HAS_FREETYPE': True,
+            'CEGUI_OPTION_DEFAULT_IMAGECODEC': 'FreeImageCodec',
+            'CEGUI_BUILD_IMAGECODEC_FREEIMAGE': True
+        }
+        cmake.configure(self, build_dir='_build', defs=options)
+        build_args = ['--']
+        if self.settings.compiler == 'gcc':
+            build_args.append('-j{0}'.format(cpu_count()))
+        cmake.build(self, args=build_args)
 
     def package(self):
         lib_dir = "_build/{0}/lib".format(self.folder)
@@ -92,6 +87,3 @@ class CeguiConan(ConanFile):
             if self.settings.build_type == "Debug" and self.settings.compiler == "Visual Studio":
                 self.cpp_info.libs = [lib+'_d' for lib in self.cpp_info.libs]
 
-    def run_and_print(self, command):
-        self.output.warn(command)
-        self.run(command)
