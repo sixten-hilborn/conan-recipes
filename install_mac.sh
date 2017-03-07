@@ -1,6 +1,6 @@
 #!/bin/bash -ex
 
-if [ -f /Library/Frameworks/Cg.framework/Versions/1.0/Cg ]
+if [ -f /Library/Frameworks/Cg.framework/Versions/1.0/Cg ]; then
     echo "Cg is already installed" >&2
     exit 0
 fi
