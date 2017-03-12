@@ -70,6 +70,7 @@ class CgConan(ConanFile):
 
     def package_info(self):
         if self.settings.os == 'Macos':
+            self.cpp_info.exelinkflags.append("-iframework /Library/Frameworks")
             self.cpp_info.exelinkflags.append("-framework Cg")
             self.cpp_info.sharedlinkflags = self.cpp_info.exelinkflags
         else:
