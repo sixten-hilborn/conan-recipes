@@ -58,9 +58,9 @@ class Sdl2MixerConan(ConanFile):
         self.run("chmod a+x %s/configure" % self.folder)
         self.run("chmod a+x %s" % sdl2_config_path)
         
-        configure_args = ["--disable-music-cmd", "--disable-music-mod-modplug", "--disable_music_mod_mikmod", "--disable-music-midi", # Stuff we give a shit about
+        configure_args = ["--disable-music-cmd", "--disable-music-mod-modplug", "--disable-music-mod-mikmod", "--disable-music-midi", # Stuff we give a shit about
                           "--disable-music-ogg", "--disable-music-flac", "--disable-music-mp3", # Stuff we declare broken atm
-                          "--disable_sdltest", "--disable_smpegtest", ""] # We disable all manual tests
+                          "--disable-sdltest", "--disable-smpegtest", ""] # We disable all manual tests
         self.output.warn(env_line)
         if self.settings.os == "Macos": # Fix rpath, we want empty rpaths, just pointing to lib file
             old_str = "-install_name \\$rpath/"
