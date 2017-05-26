@@ -10,12 +10,12 @@ if __name__ == "__main__":
     if os_info.is_macos:
         extra_options += [("CEGUI:with_ois", "False"), ("CEGUI:with_sdl", "True")]  # Build with SDL since OIS doesn't work on macOS
     # Disable VS2010 because of missing DirectX stuff
-    # Disable x86 Linux builds (OGRE x86 package does not work at the moment)
+    # Disable x86 Linux builds (OGRE x86 package does not work at the moment) and x86 Macos builds (libxml2 fails there)
     builder.builds = [
         [settings, dict(options.items() + extra_options), env_vars, build_requires]
         for settings, options, env_vars, build_requires in builder.builds
         if not (settings["compiler"] == "Visual Studio" and settings["compiler.version"] == "10")
-        and not (os_info.is_linux and settings["arch"] == "x86")
+        and not ((os_info.is_linux or os_info.is_macos) and settings["arch"] == "x86")
     ]
     builder.run()
 
