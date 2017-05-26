@@ -9,4 +9,3 @@ SET(CMAKE_VERBOSE_MAKEFILE 1)
 
 ADD_EXECUTABLE(example example.cpp)
 target_link_libraries(example ${CONAN_LIBS})
-
