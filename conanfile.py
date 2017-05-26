@@ -1,27 +1,28 @@
-from conans import ConanFile
+from conans import ConanFile, ConfigureEnvironment
 from conans.tools import download, unzip, replace_in_file
 import os
-import shutil
-from conans import CMake, ConfigureEnvironment
-from conans.model.settings import Settings
-import copy
 
-class SDL_MixerConan(ConanFile):
+class Sdl2MixerConan(ConanFile):
     name = "SDL2_mixer"
     version = "2.0.1"
+    description = "SDL2_mixer is a sample multi-channel audio mixer library."
     folder = "SDL2_mixer-%s" % version
     settings = "os", "arch", "compiler", "build_type"
-    options = {"shared": [True, False]
-            , "fPIC": [True, False]
-            }
-    default_options = '''shared=False
-    fPIC=True'''
+    options = {
+        "shared": [True, False],
+        "fPIC": [True, False]
+    }
+    default_options = (
+        'shared=False',
+        'fPIC=True'
+    )
     generators = "cmake"
-    requires = "SDL2/2.0.5@lasote/stable"
-    license="MIT"
+    requires = "SDL2/2.0.5@lasote/ci"
+    url = "https://github.com/sixten-hilborn/conan-sdl2_mixer"
+    license = "zlib License - https://opensource.org/licenses/Zlib"
 
     def config(self):
-        del self.settings.compiler.libcxx 
+        del self.settings.compiler.libcxx
 
     def source(self):
         if self.settings.os == "Windows":
@@ -62,7 +63,7 @@ class SDL_MixerConan(ConanFile):
                           "--disable_sdltest", "--disable_smpegtest", ""] # We disable all manual tests
         self.output.warn(env_line)
         if self.settings.os == "Macos": # Fix rpath, we want empty rpaths, just pointing to lib file
-            old_str = "-install_name \$rpath/"
+            old_str = "-install_name \\$rpath/"
             new_str = "-install_name "
             replace_in_file("%s/configure" % self.folder, old_str, new_str)
         
@@ -94,12 +95,11 @@ class SDL_MixerConan(ConanFile):
                 self.copy(pattern="*.lib", dst="lib", src="%s/lib/x64" % self.folder, keep_path=False)
                 self.copy(pattern="*.dll*", dst="bin", src="%s/lib/x64" % self.folder, keep_path=False)
         if not self.options.shared:
-            self.copy(pattern="*.a", dst="lib", src="%s" % self.folder, keep_path=False)   
+            self.copy(pattern="*.a", dst="lib", src="%s" % self.folder, keep_path=False)
         else:
             self.copy(pattern="*.so*", dst="lib", src="%s" % self.folder, keep_path=False)
             self.copy(pattern="*.dylib*", dst="lib", src="%s" % self.folder, keep_path=False)
 
-    def package_info(self):  
-                
+    def package_info(self):
         self.cpp_info.libs = ["SDL2_mixer"]
         self.cpp_info.includedirs += ["include/SDL2"]
