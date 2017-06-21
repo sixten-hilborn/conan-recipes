@@ -1,6 +1,7 @@
-from conans import ConanFile, ConfigureEnvironment
+from conans import ConanFile, ConfigureEnvironment, CMake
 from conans.tools import download, unzip, replace_in_file
 import os
+import shutil
 
 class Sdl2MixerConan(ConanFile):
     name = "SDL2_mixer"
@@ -10,38 +11,63 @@ class Sdl2MixerConan(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
-        "fPIC": [True, False]
+        "fPIC": [True, False],
+        "with_smpeg": [True, False],
+        "with_flac": [True, False],
+        "with_ogg": [True, False],
     }
     default_options = (
         'shared=False',
-        'fPIC=True'
+        'fPIC=True',
+        'with_smpeg=False',
+        'with_flac=False',
+        'with_ogg=True'
     )
     generators = "cmake"
     requires = "SDL2/2.0.5@lasote/ci"
+    exports = ["CMakeLists.txt"]
     url = "https://github.com/sixten-hilborn/conan-sdl2_mixer"
     license = "zlib License - https://opensource.org/licenses/Zlib"
 
     def config(self):
         del self.settings.compiler.libcxx
 
+    def requirements(self):
+        if self.options.with_smpeg:
+            pass
+        if self.options.with_flac:
+            self.requires("FLAC/1.3.2@GatorQue/stable")
+        if self.options.with_ogg:
+            self.requires("ogg/1.3.2@coding3d/stable")  # ogg/1.3.2@GatorQue/stable
+            self.requires("vorbis/1.3.5@coding3d/stable")
+
     def source(self):
-        if self.settings.os == "Windows":
-            return
         zip_name = "%s.tar.gz" % self.folder
         download("https://www.libsdl.org/projects/SDL_mixer/release/%s" % zip_name, zip_name)
         unzip(zip_name)
+        os.unlink(zip_name)
+        shutil.move("CMakeLists.txt", "%s/CMakeLists.txt" % self.folder)
 
     def build(self):
-        if self.settings.os == "Windows":
-            self.build_copying_libs()
-        else:
-            self.build_with_make()
+        cmake = CMake(self)
+        defs = {
+            'CMAKE_INSTALL_PREFIX': os.path.join(self.conanfile_directory, 'install'),
+            'CMAKE_POSITION_INDEPENDENT_CODE': self.options.fPIC,
+            'SDLMIXER_SUPPORT_OGG_MUSIC': self.options.with_ogg,
+            'SDLMIXER_SUPPORT_MP3_MUSIC': self.options.with_smpeg,
+            'SDLMIXER_SUPPORT_FLAC_MUSIC': self.options.with_flac,
+        }
+        src = os.path.join(self.conanfile_directory, self.folder)
+        cmake.configure(build_dir='build', source_dir=src, defs=defs)
+        cmake.build(target='install')
 
+    # Deprecated for CMake
     def build_copying_libs(self):
         zip_name = "SDL2_mixer-devel-%s-VC.zip" % self.version
         download("https://www.libsdl.org/projects/SDL_mixer/release/%s" % zip_name, zip_name)
         unzip(zip_name)
 
+    # Deprecated for CMake
     def build_with_make(self):
         
         env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
@@ -85,20 +111,13 @@ class Sdl2MixerConan(ConanFile):
         """ Define your conan structure: headers, libs and data. After building your
             project, this method is called to create a defined structure:
         """
-        self.copy(pattern="*SDL_mixer.h", dst="include/SDL2", src="%s" % self.folder, keep_path=False)
-
-        if self.settings.os == "Windows":
-            if self.settings.arch == "x86":
-                self.copy(pattern="*.lib", dst="lib", src="%s/lib/x86" % self.folder, keep_path=False)
-                self.copy(pattern="*.dll*", dst="bin", src="%s/lib/x86" % self.folder, keep_path=False)
-            else:
-                self.copy(pattern="*.lib", dst="lib", src="%s/lib/x64" % self.folder, keep_path=False)
-                self.copy(pattern="*.dll*", dst="bin", src="%s/lib/x64" % self.folder, keep_path=False)
-        if not self.options.shared:
-            self.copy(pattern="*.a", dst="lib", src="%s" % self.folder, keep_path=False)
-        else:
-            self.copy(pattern="*.so*", dst="lib", src="%s" % self.folder, keep_path=False)
-            self.copy(pattern="*.dylib*", dst="lib", src="%s" % self.folder, keep_path=False)
+        folder = 'install'
+        self.copy(pattern="*SDL_mixer.h", dst="include/SDL2", src=folder, keep_path=False)
+        self.copy(pattern="*.lib", dst="lib", src=folder, keep_path=False)
+        self.copy(pattern="*.dll*", dst="bin", src=folder, keep_path=False)
+        self.copy(pattern="*.a", dst="lib", src=folder, keep_path=False)
+        self.copy(pattern="*.so*", dst="lib", src=folder, keep_path=False)
+        self.copy(pattern="*.dylib*", dst="lib", src=folder, keep_path=False)
 
     def package_info(self):
         self.cpp_info.libs = ["SDL2_mixer"]
