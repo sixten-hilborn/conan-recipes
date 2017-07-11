@@ -2,7 +2,7 @@ from conan.packager import ConanMultiPackager
 from conans.tools import os_info
 
 if __name__ == "__main__":
-    builder = ConanMultiPackager()
+    builder = ConanMultiPackager(args='--build=missing')
     builder.add_common_builds(shared_option_name="SDL2_mixer:shared", pure_c=True)
 
     # Some isues with macOS/Linux and x86
