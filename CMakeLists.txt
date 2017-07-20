@@ -54,7 +54,7 @@ endif()
 
 include_directories("${SMPEG_SOURCE_DIR}")
 
-add_library(SMPEG SHARED
+add_library(SMPEG
 	${SMPEG_SOURCES}
 )
 
@@ -72,6 +72,7 @@ if(WIN32)
 endif()
 
 target_link_libraries(SMPEG PUBLIC CONAN_PKG::SDL2)
+target_compile_definitions(SMPEG PRIVATE SDL_MAIN_HANDLED)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY build)
 set_target_properties(SMPEG

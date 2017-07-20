@@ -6,8 +6,7 @@ environment:
 
     CONAN_LOGIN_USERNAME: sixten-hilborn
     CONAN_UPLOAD: https://api.bintray.com/conan/sixten-hilborn/conan
-    CONAN_REMOTES: https://api.bintray.com/conan/dimi309/conan-packages
-    CONAN_REFERENCE: "SDL2_mixer/2.0.1"
+    CONAN_REFERENCE: "smpeg/2.0.0"
     CONAN_USERNAME: "hilborn"
     CONAN_CHANNEL: "stable"
     CONAN_TOTAL_PAGES: 4

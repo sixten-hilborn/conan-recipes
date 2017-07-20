@@ -1,5 +1,5 @@
 from conans import ConanFile, ConfigureEnvironment, CMake
-from conans.tools import download, unzip
+from conans.tools import download, unzip, replace_in_file
 import os
 import shutil
 
@@ -14,7 +14,7 @@ class SmpegConan(ConanFile):
         "fPIC": [True, False]
     }
     default_options = (
-        'shared=False',
+        'shared=True',
         'fPIC=True'
     )
     generators = "cmake"
@@ -23,8 +23,6 @@ class SmpegConan(ConanFile):
     url = "https://github.com/sixten-hilborn/conan-smpeg"
     license = "Library GPL 2.0 - https://www.gnu.org/licenses/old-licenses/lgpl-2.0.html"
 
-    def config(self):
-        del self.settings.compiler.libcxx
 
     def source(self):
         zip_name = "%s.tar.gz" % self.folder
