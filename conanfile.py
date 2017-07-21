@@ -47,11 +47,11 @@ class Sdl2MixerConan(ConanFile):
             self.requires("ogg/1.3.2@coding3d/stable")  # ogg/1.3.2@GatorQue/stable
             self.requires("vorbis/1.3.5@coding3d/stable")
         if self.options.with_libmikmod:
-            self.requires("libmikmod/3.3.11.1/@hilborn/stable")
+            self.requires("libmikmod/3.3.11.1@hilborn/stable")
         if self.options.with_libmodplug:
-            self.requires("libmodplug/0.8.8.5/@hilborn/stable")
+            self.requires("libmodplug/0.8.8.5@hilborn/stable")
         if self.options.with_libmad:
-            self.requires("libmad/0.15.1/@hilborn/stable")
+            self.requires("libmad/0.15.1@hilborn/stable")
 
     def source(self):
         zip_name = "%s.tar.gz" % self.folder
