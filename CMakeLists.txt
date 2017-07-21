@@ -54,11 +54,11 @@ endif()
 
 include_directories("${SMPEG_SOURCE_DIR}")
 
-add_library(SMPEG
+add_library(smpeg2
 	${SMPEG_SOURCES}
 )
 
-set_target_properties(SMPEG
+set_target_properties(smpeg2
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
@@ -71,15 +71,11 @@ if(WIN32)
 	endif()
 endif()
 
-target_link_libraries(SMPEG PUBLIC CONAN_PKG::SDL2)
-target_compile_definitions(SMPEG PRIVATE SDL_MAIN_HANDLED)
+target_link_libraries(smpeg2 PUBLIC CONAN_PKG::SDL2)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY build)
-set_target_properties(SMPEG
-	PROPERTIES PREFIX "" OUTPUT_NAME "libsmpeg2"
-)
 
-install(TARGETS SMPEG
+install(TARGETS smpeg2
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib
 	ARCHIVE DESTINATION lib)
