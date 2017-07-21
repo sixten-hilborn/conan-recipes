@@ -3,7 +3,7 @@ from conans.tools import os_info
 
 if __name__ == "__main__":
     builder = ConanMultiPackager(args='--build=missing')
-    builder.add_common_builds(shared_option_name="smpeg:shared", pure_c=False)
+    builder.add_common_builds(shared_option_name="SDL2:shared", pure_c=False)
 
     # Some isues with macOS/Linux and x86
     if os_info.is_linux or os_info.is_macos:

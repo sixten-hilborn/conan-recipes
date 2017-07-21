@@ -1,4 +1,4 @@
-from conans import ConanFile, ConfigureEnvironment, CMake
+from conans import ConanFile, CMake
 from conans.tools import download, unzip, replace_in_file
 import os
 import shutil
@@ -14,7 +14,6 @@ class SmpegConan(ConanFile):
         "fPIC": [True, False]
     }
     default_options = (
-        'shared=True',
         'fPIC=True'
     )
     generators = "cmake"
@@ -22,6 +21,19 @@ class SmpegConan(ConanFile):
     exports = ["CMakeLists.txt"]
     url = "https://github.com/sixten-hilborn/conan-smpeg"
     license = "Library GPL 2.0 - https://www.gnu.org/licenses/old-licenses/lgpl-2.0.html"
+
+    def configure(self):
+        sdl_shared = self.options['SDL2'].shared
+        if sdl_shared is None:
+            sdl_shared = False
+
+        if self.options.shared.value is None:
+            self.options.shared = sdl_shared
+
+        if self.options.shared != sdl_shared:
+            message = 'smpeg:shared ({0}) must be the same as SDL2:shared ({1})'.format(
+                self.options.shared, sdl_shared)
+            raise Exception(message)
 
 
     def source(self):
