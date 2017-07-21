@@ -30,6 +30,9 @@ class SmpegConan(ConanFile):
         unzip(zip_name)
         os.unlink(zip_name)
         shutil.move("CMakeLists.txt", "%s/CMakeLists.txt" % self.folder)
+        # Fix "memset" missing
+        replace_in_file('%s/audio/MPEGaudio.cpp' % self.folder, '#include "MPEGaudio.h"', '''#include "MPEGaudio.h"
+#include <string.h>''')
 
     def build(self):
         cmake = CMake(self)
