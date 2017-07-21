@@ -70,7 +70,8 @@ class Sdl2MixerConan(ConanFile):
             'SDLMIXER_SUPPORT_MP3_MAD_MUSIC': self.options.with_libmad,
             'SDLMIXER_SUPPORT_FLAC_MUSIC': self.options.with_flac,
             'SDLMIXER_SUPPORT_MODPLUG_MUSIC': self.options.with_libmodplug,
-            'SDLMIXER_SUPPORT_MOD_MUSIC': self.options.with_libmikmod
+            'SDLMIXER_SUPPORT_MOD_MUSIC': self.options.with_libmikmod,
+            'SDLMIXER_SUPPORT_MID_MUSIC_FLUIDSYNTH': False
         }
         src = os.path.join(self.conanfile_directory, self.folder)
         cmake.configure(build_dir='build', source_dir=src, defs=defs)
