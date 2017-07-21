@@ -15,13 +15,19 @@ class Sdl2MixerConan(ConanFile):
         "with_smpeg": [True, False],
         "with_flac": [True, False],
         "with_ogg": [True, False],
+        "with_libmikmod": [True, False],
+        "with_libmodplug": [True, False],
+        "with_libmad": [True, False]
     }
     default_options = (
         'shared=False',
         'fPIC=True',
         'with_smpeg=False',
         'with_flac=False',
-        'with_ogg=True'
+        'with_ogg=True',
+        'with_libmikmod=True',
+        'with_libmodplug=False',
+        'with_libmad=False'
     )
     generators = "cmake"
     requires = "SDL2/2.0.5@lasote/ci"
@@ -34,12 +40,18 @@ class Sdl2MixerConan(ConanFile):
 
     def requirements(self):
         if self.options.with_smpeg:
-            pass
+            self.requires("smpeg/2.0.0@hilborn/stable")
         if self.options.with_flac:
             self.requires("FLAC/1.3.2@GatorQue/stable")
         if self.options.with_ogg:
             self.requires("ogg/1.3.2@coding3d/stable")  # ogg/1.3.2@GatorQue/stable
             self.requires("vorbis/1.3.5@coding3d/stable")
+        if self.options.with_libmikmod:
+            self.requires("libmikmod/3.3.11.1/@hilborn/stable")
+        if self.options.with_libmodplug:
+            self.requires("libmodplug/0.8.8.5/@hilborn/stable")
+        if self.options.with_libmad:
+            self.requires("libmad/0.15.1/@hilborn/stable")
 
     def source(self):
         zip_name = "%s.tar.gz" % self.folder
@@ -55,7 +67,10 @@ class Sdl2MixerConan(ConanFile):
             'CMAKE_POSITION_INDEPENDENT_CODE': self.options.fPIC,
             'SDLMIXER_SUPPORT_OGG_MUSIC': self.options.with_ogg,
             'SDLMIXER_SUPPORT_MP3_MUSIC': self.options.with_smpeg,
+            'SDLMIXER_SUPPORT_MP3_MAD_MUSIC': self.options.with_libmad,
             'SDLMIXER_SUPPORT_FLAC_MUSIC': self.options.with_flac,
+            'SDLMIXER_SUPPORT_MODPLUG_MUSIC': self.options.with_libmodplug,
+            'SDLMIXER_SUPPORT_MOD_MUSIC': self.options.with_libmikmod
         }
         src = os.path.join(self.conanfile_directory, self.folder)
         cmake.configure(build_dir='build', source_dir=src, defs=defs)
