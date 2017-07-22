@@ -22,8 +22,8 @@ class Sdl2MixerConan(ConanFile):
     default_options = (
         'shared=False',
         'fPIC=True',
-        'with_smpeg=False',
-        'with_flac=False',
+        'with_smpeg=True',
+        'with_flac=True',
         'with_ogg=True',
         'with_libmikmod=True',
         'with_libmodplug=False',
@@ -44,7 +44,8 @@ class Sdl2MixerConan(ConanFile):
         if self.options.with_flac:
             self.requires("FLAC/1.3.2@GatorQue/stable")
         if self.options.with_ogg:
-            self.requires("ogg/1.3.2@coding3d/stable")  # ogg/1.3.2@GatorQue/stable
+            # self.requires("ogg/1.3.2@coding3d/stable")
+            self.requires("ogg/1.3.2@GatorQue/stable")
             self.requires("vorbis/1.3.5@coding3d/stable")
         if self.options.with_libmikmod:
             self.requires("libmikmod/3.3.11.1@hilborn/stable")
