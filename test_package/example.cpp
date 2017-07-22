@@ -17,7 +17,7 @@ void try_load(const char* file)
 
 int main(int argc, char** args)
 {
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+	if (SDL_Init(SDL_INIT_AUDIO) != 0)
 	{
 		std::cerr << "Unable to initialize SDL: " << SDL_GetError() << std::endl;
 		return 1;
