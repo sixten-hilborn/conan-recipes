@@ -17,8 +17,16 @@ void try_load(const char* file)
 
 int main(int argc, char** args)
 {
-	SDL_Init(SDL_INIT_EVERYTHING);
-	Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096);
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+	{
+		std::cerr << "Unable to initialize SDL: " << SDL_GetError() << std::endl;
+		return 1;
+	}
+	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) != 0)
+	{
+		std::cerr << "Mix_OpenAudio: " << Mix_GetError() << std::endl;
+		return 1;
+	}
 
 	try_load("test.wav");
 	try_load("test.mp3");
