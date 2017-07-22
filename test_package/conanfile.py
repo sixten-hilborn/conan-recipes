@@ -27,4 +27,7 @@ class DefaultNameConan(ConanFile):
         self.copy(pattern="*.dylib", dst="bin", src="lib")
 
     def test(self):
-        self.run("cd bin && .%sexample" % (os.sep))
+        binary = os.path.join(os.getcwd(), "bin", "example")
+        # Change working dir to path to test input files
+        os.chdir(self.conanfile_directory)
+        self.run(binary)
