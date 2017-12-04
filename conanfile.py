@@ -1,7 +1,5 @@
-from conans import ConanFile
+from conans import CMake, ConanFile, tools
 import os
-from conans.tools import get, patch
-from conans import CMake
 
 class LuaConan(ConanFile):
     name = "lua"
@@ -23,12 +21,12 @@ class LuaConan(ConanFile):
         del self.settings.compiler.libcxx
 
     def source(self):
-        get("https://github.com/LuaDist/lua/archive/{0}".format(self.zip_name))
-        patch(base_path=self.folder, patch_file="CMakeLists.txt.patch")
+        tools.get("https://github.com/LuaDist/lua/archive/{0}".format(self.zip_name))
+        tools.patch(base_path=self.folder, patch_file="CMakeLists.txt.patch")
 
     def build(self):
         cmake = CMake(self)
-        cmake.definitions['CMAKE_INSTALL_PREFIX'] = 'install'
+        cmake.definitions['CMAKE_INSTALL_PREFIX'] = os.path.join(self.conanfile_directory, 'install')
         cmake.definitions['BUILD_TESTING'] = False
         cmake.definitions['LUA_BUILD_WLUA'] = False
         cmake.definitions['LUA_BUILD_AS_SHARED'] = self.options.shared
