@@ -25,12 +25,13 @@ class LuaConan(ConanFile):
         tools.patch(base_path=self.folder, patch_file="CMakeLists.txt.patch")
 
     def build(self):
+        src_dir = os.path.join(self.conanfile_directory, self.folder)
         cmake = CMake(self)
         cmake.definitions['CMAKE_INSTALL_PREFIX'] = os.path.join(self.conanfile_directory, 'install')
         cmake.definitions['BUILD_TESTING'] = False
         cmake.definitions['LUA_BUILD_WLUA'] = False
         cmake.definitions['LUA_BUILD_AS_SHARED'] = self.options.shared
-        cmake.configure(build_dir='_build')
+        cmake.configure(build_dir='_build', source_dir=src_dir)
         cmake.build(target='install')
 
     def package(self):
