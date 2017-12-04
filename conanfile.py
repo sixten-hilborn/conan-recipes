@@ -27,31 +27,27 @@ class LuaConan(ConanFile):
         patch(base_path=self.folder, patch_file="CMakeLists.txt.patch")
 
     def build(self):
-        self.makedir('_build')
-        cmake = CMake(self.settings)
-        cd_build = 'cd _build'
-        options = (
-            '-DCMAKE_INSTALL_PREFIX=../_build/install '
-            '-DBUILD_TESTING=0 '
-            '-DLUA_BUILD_WLUA=0 '
-            '-DLUA_BUILD_AS_SHARED={0}'.format(1 if self.options.shared else 0))
-        build_options = ''
-        self.run_and_print('%s && cmake "../%s" %s %s' % (cd_build, self.folder, cmake.command_line, options))
-        self.run_and_print("%s && cmake --build . --target install %s %s" % (cd_build, cmake.build_config, build_options))
+        cmake = CMake(self)
+        cmake.definitions['CMAKE_INSTALL_PREFIX'] = 'install'
+        cmake.definitions['BUILD_TESTING'] = False
+        cmake.definitions['LUA_BUILD_WLUA'] = False
+        cmake.definitions['LUA_BUILD_AS_SHARED'] = self.options.shared
+        cmake.configure(build_dir='_build')
+        cmake.build(target='install')
 
     def package(self):
         self.copy("FindLua.cmake", ".", ".")
 
         # Headers
-        self.copy(pattern="*.h", dst="include", src="_build/install/include", keep_path=True)
-        self.copy(pattern="*.hpp", dst="include", src="_build/install/include", keep_path=True)
+        self.copy(pattern="*.h", dst="include", src="install/include", keep_path=True)
+        self.copy(pattern="*.hpp", dst="include", src="install/include", keep_path=True)
 
         # libs
-        self.copy(pattern="*.a", dst="lib", src="_build/install/lib", keep_path=False)
-        self.copy(pattern="*.so*", dst="lib", src="_build/install/lib", keep_path=False)
-        self.copy(pattern="*.dylib", dst="lib", src="_build/install/lib", keep_path=False)
-        self.copy(pattern="*.lib", dst="lib", src="_build/install/lib", keep_path=False)
-        self.copy(pattern="*.dll", dst="bin", src="_build/install/bin", keep_path=False)
+        self.copy(pattern="*.a", dst="lib", src="install/lib", keep_path=False)
+        self.copy(pattern="*.so*", dst="lib", src="/install/lib", keep_path=False)
+        self.copy(pattern="*.dylib", dst="lib", src="install/lib", keep_path=False)
+        self.copy(pattern="*.lib", dst="lib", src="install/lib", keep_path=False)
+        self.copy(pattern="*.dll", dst="bin", src="install/bin", keep_path=False)
 
 
     def package_info(self):
@@ -61,13 +57,3 @@ class LuaConan(ConanFile):
             self.cpp_info.libs = ['lua_static']
             if self.settings.compiler == 'gcc':
                 self.cpp_info.libs.extend(['m', 'dl'])
-
-    def makedir(self, path):
-        if self.settings.os == "Windows":
-            self.run("IF not exist {0} mkdir {0}".format(path))
-        else:
-            self.run("mkdir {0}".format(path))
-
-    def run_and_print(self, command):
-        self.output.info(command)
-        self.run(command)
