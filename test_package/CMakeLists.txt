@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(TestSmpeg)
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
+conan_basic_setup(SKIP_RPATH)
 
 set(VERBOSE 1)
 set(CMAKE_VERBOSE_MAKEFILE 1)
