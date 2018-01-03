@@ -1,12 +1,10 @@
-PROJECT(TestLua)
-cmake_minimum_required(VERSION 2.8)
+project(test_package)
+cmake_minimum_required(VERSION 2.8.11)
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-CONAN_BASIC_SETUP()
+conan_basic_setup()
 
-SET(VERBOSE 1)
-SET(CMAKE_VERBOSE_MAKEFILE 1)
-
-ADD_EXECUTABLE(example example.c)
-target_link_libraries(example ${CONAN_LIBS})
-
+add_executable(${PROJECT_NAME} test_package.c)
+target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
+# Copy hello.lua to output dir
+configure_file(hello.lua hello.lua)

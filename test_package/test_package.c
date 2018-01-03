@@ -12,16 +12,18 @@ int main(int argc, char *argv[]) {
 	luaL_openlibs(L);
 
 	// Execution of a lua string
-	luaL_dostring(L, "print \"Yo dude\"");
+	luaL_dostring(L, "print \"Testing dostring\"");
 
 	// Load a string and then execute it.
-	luaL_loadstring(L, "io.write(\"I'm here too\\n\")");
+	luaL_loadstring(L, "io.write(\"Testing loadstring\\n\")");
 	lua_pcall(L, 0, LUA_MULTRET, 0);
 
 	// Load from a file and then execute
 	if (luaL_loadfile(L, "hello.lua") == 0) {
 		// File loaded call it
 		lua_pcall(L, 0, LUA_MULTRET, 0);
+	} else {
+		printf("Unable to load file hello.lua\n");
 	}
 
 	// Close lua

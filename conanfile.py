@@ -1,58 +1,69 @@
-from conans import CMake, ConanFile, tools
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from conans import ConanFile, CMake, tools
 import os
+
 
 class LuaConan(ConanFile):
     name = "lua"
-    description = "C API of the programming language Lua"
     version = "5.1.4"
-    generators = "cmake"
-    settings = "os", "arch", "compiler", "build_type"
-    options = {
-        "shared": [True, False]
-    }
-    default_options = "shared=True"
     url = "http://github.com/sixten-hilborn/conan-lua"
-    license = "https://www.lua.org/license.html"
-    exports = "FindLua.cmake", "CMakeLists.txt.patch"
-    folder = "lua-{0}".format(version)
-    zip_name = "{0}.tar.gz".format(version)
-
-    def configure(self):
-        del self.settings.compiler.libcxx
-
+    description = "C API of the programming language Lua"
+    
+    # Indicates License type of the packaged library
+    license = "MIT"
+    
+    # Packages the license for the conanfile.py
+    exports = ["LICENSE.md"]
+    
+    # Remove following lines if the target lib does not use cmake.
+    exports_sources = ["FindLua.cmake", "CMakeLists.txt.patch"]
+    generators = "cmake" 
+    
+    # Options may need to change depending on the packaged library. 
+    settings = "os", "arch", "compiler", "build_type"
+    options = {"shared": [True, False]}
+    default_options = "shared=False"
+    
+    # Custom attributes for Bincrafters recipe conventions
+    source_subfolder = "source_subfolder"
+    build_subfolder = "build_subfolder"
+        
     def source(self):
-        tools.get("https://github.com/LuaDist/lua/archive/{0}".format(self.zip_name))
-        tools.patch(base_path=self.folder, patch_file="CMakeLists.txt.patch")
+        source_url = "https://github.com/LuaDist/lua"
+        tools.get("{0}/archive/{1}.tar.gz".format(source_url, self.version))
+        extracted_dir = self.name + "-" + self.version
 
+        #Rename to "source_subfolder" is a convention to simplify later steps
+        os.rename(extracted_dir, self.source_subfolder)
+        tools.patch(base_path=self.source_subfolder, patch_file="CMakeLists.txt.patch")
+
+        
     def build(self):
-        src_dir = os.path.join(self.conanfile_directory, self.folder)
         cmake = CMake(self)
-        cmake.definitions['CMAKE_INSTALL_PREFIX'] = os.path.join(self.conanfile_directory, 'install')
         cmake.definitions['BUILD_TESTING'] = False
         cmake.definitions['LUA_BUILD_WLUA'] = False
         cmake.definitions['LUA_BUILD_AS_SHARED'] = self.options.shared
-        cmake.configure(build_dir='_build', source_dir=src_dir)
-        cmake.build(target='install')
-
+        cmake.definitions['SKIP_INSTALL_DATA'] = True
+        cmake.configure(build_folder=self.build_subfolder, source_folder=self.source_subfolder)
+        cmake.build()
+        cmake.install()
+        
     def package(self):
-        self.copy("FindLua.cmake", ".", ".")
-
-        # Headers
-        self.copy(pattern="*.h", dst="include", src="install/include", keep_path=True)
-        self.copy(pattern="*.hpp", dst="include", src="install/include", keep_path=True)
-
-        # libs
-        self.copy(pattern="*.a", dst="lib", src="install/lib", keep_path=False)
-        self.copy(pattern="*.so*", dst="lib", src="install/lib", keep_path=False)
-        self.copy(pattern="*.dylib", dst="lib", src="install/lib", keep_path=False)
-        self.copy(pattern="*.lib", dst="lib", src="install/lib", keep_path=False)
-        self.copy(pattern="*.dll", dst="bin", src="install/bin", keep_path=False)
-
+        # If the CMakeLists.txt has a proper install method, the steps below may be redundant
+        # If so, you can replace all the steps below with the word "pass"
+        include_folder = os.path.join(self.source_subfolder, "include")
+        self.copy("FindLua.cmake")
+        self.copy(pattern="LICENSE")
+        self.copy(pattern="*", dst="include", src=include_folder)
+        self.copy(pattern="*.dll", dst="bin", keep_path=False)
+        self.copy(pattern="*.lib", dst="lib", keep_path=False)
+        self.copy(pattern="*.a", dst="lib", keep_path=False)
+        self.copy(pattern="*.so*", dst="lib", keep_path=False)
+        self.copy(pattern="*.dylib", dst="lib", keep_path=False)
 
     def package_info(self):
-        if self.options.shared:
-            self.cpp_info.libs = ['lua']
-        else:
-            self.cpp_info.libs = ['lua_static']
-            if self.settings.compiler == 'gcc':
-                self.cpp_info.libs.extend(['m', 'dl'])
+        self.cpp_info.libs = tools.collect_libs(self)
+        if self.settings.compiler == 'gcc':
+            self.cpp_info.libs.extend(['m', 'dl'])
