@@ -65,5 +65,5 @@ class LuaConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
-        if self.settings.compiler == 'gcc':
+        if self.settings.compiler in ['gcc', 'clang']:
             self.cpp_info.libs.extend(['m', 'dl'])
