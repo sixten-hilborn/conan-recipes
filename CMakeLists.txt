@@ -167,7 +167,7 @@ add_library(SDL2_mixer
 	wavestream.c
 	${SDLMIXER_ADDITIONAL_SRC})
 	
-target_link_libraries(SDL2_mixer CONAN_PKG::SDL2 ${SDLMIXER_LIBRARIES})
+target_link_libraries(SDL2_mixer CONAN_PKG::sdl2 ${SDLMIXER_LIBRARIES})
 
 install(TARGETS SDL2_mixer
 	RUNTIME DESTINATION bin
