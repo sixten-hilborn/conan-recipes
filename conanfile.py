@@ -1,12 +1,27 @@
-import os
-import shutil
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from conans import ConanFile, CMake, tools
+import os
 
 
 class SdlGpuConan(ConanFile):
-    name = "SDL_gpu"
+    name = "sdl_gpu"
     version = "0.11.0"
+    url = "https://github.com/sixten-hilborn/conan-sdl_gpu"
     description = "A library for high-performance, modern 2D graphics with SDL written in C."
+    
+    # Indicates License type of the packaged library
+    license = "MIT License - https://opensource.org/licenses/MIT"
+    
+    # Packages the license for the conanfile.py
+    exports = ["LICENSE.md"]
+    
+    # Remove following lines if the target lib does not use cmake.
+    exports_sources = ["CMakeLists.txt"]
+    generators = "cmake" 
+    
+    # Options may need to change depending on the packaged library. 
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
@@ -17,16 +32,15 @@ class SdlGpuConan(ConanFile):
         'fPIC=True',
         'use_sdl1=False'
     )
-    generators = "cmake"
-    exports = ["CMakeLists.txt"]
-    url = "https://github.com/sixten-hilborn/conan-sdl_gpu"
-    license = "MIT License - https://opensource.org/licenses/MIT"
-
-    def config(self):
+    
+    # Custom attributes for Bincrafters recipe conventions
+    source_subfolder = "source_subfolder"
+    build_subfolder = "build_subfolder"
+    
+    def configure(self):
         del self.settings.compiler.libcxx
 
-    def configure(self):
-        sdl = 'SDL' if self.options.use_sdl1 else 'SDL2'
+        sdl = 'sdl' if self.options.use_sdl1 else 'sdl2'
         sdl_shared = self.options[sdl].shared
         if sdl_shared is None:
             sdl_shared = False
@@ -35,59 +49,94 @@ class SdlGpuConan(ConanFile):
             self.options.shared = sdl_shared
 
         if self.options.shared != sdl_shared:
-            message = 'SDL_gpu:shared ({0}) must be the same as {1}:shared ({2})'.format(
+            message = 'sdl_gpu:shared ({0}) must be the same as {1}:shared ({2})'.format(
                 self.options.shared, sdl, sdl_shared)
             raise Exception(message)
 
     def requirements(self):
         if self.options.use_sdl1:
             # Does not exist at the moment, but can be overridden
-            self.requires("SDL/[>=1.2.15]@conan/stable")
+            self.requires("sdl/[>=1.2.15]@conan/stable")
         else:
-            self.requires("SDL2/[>=2.0.5]@bincrafters/testing")
+            self.requires("sdl2/[>=2.0.5]@bincrafters/stable")
+
 
     def source(self):
         #commit = '6f6fb69b56363182d693b3fb8eb2b2b1853a9565'
         commit = 'daffef8128fe1ac24d44814ef0e51e68b97feb1f'
-        tools.get('https://github.com/grimfang4/sdl-gpu/archive/{0}.tar.gz'.format(commit))
-        shutil.move('sdl-gpu-{0}'.format(commit), 'sdl-gpu')
 
+        source_url = "https://github.com/grimfang4/sdl-gpu"
+        tools.get("{0}/archive/{1}.tar.gz".format(source_url, commit))
+        extracted_dir = 'sdl-gpu-' + commit
+
+        #Rename to "source_subfolder" is a convention to simplify later steps
+        os.rename(extracted_dir, self.source_subfolder)
+
+        
     def build(self):
+        # Patch FindSDL2.cmake to find SDL2
         tools.replace_in_file(
-            'sdl-gpu/scripts/FindSDL2.cmake',
+            '{}/scripts/FindSDL2.cmake'.format(self.source_subfolder),
             'find_library(SDL2_LIBRARY NAMES SDL2 sdl2 sdl2 sdl-2.0',
             'find_library(SDL2_LIBRARY NAMES SDL2 sdl2 sdl2 sdl-2.0 SDL2d')
-        cmake = CMake(self)
-        defs = {
-            'CMAKE_INSTALL_PREFIX': os.path.join(self.build_folder, 'install'),
-            'CMAKE_POSITION_INDEPENDENT_CODE': self.options.fPIC,
-            'SDL_gpu_INSTALL': True,
-            'SDL_gpu_BUILD_DEMOS': False,
-            'SDL_gpu_BUILD_SHARED': self.options.shared,
-            'SDL_gpu_BUILD_STATIC': not self.options.shared,
-            'SDL_gpu_USE_SDL1': self.options.use_sdl1
-        }
-        cmake.configure(build_dir='build', defs=defs)
-        cmake.build(target='install')
 
+        cmake = CMake(self)
+        cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
+        cmake.definitions['SDL_gpu_INSTALL'] = True
+        cmake.definitions['SDL_gpu_BUILD_DEMOS'] = False
+        cmake.definitions['SDL_gpu_BUILD_SHARED'] = self.options.shared
+        cmake.definitions['SDL_gpu_BUILD_STATIC'] = not self.options.shared
+        cmake.definitions['SDL_gpu_USE_SDL1'] = self.options.use_sdl1
+        cmake.configure(build_folder=self.build_subfolder)
+        cmake.build()
+        cmake.install()
+        
     def package(self):
-        """ Define your conan structure: headers, libs and data. After building your
-            project, this method is called to create a defined structure:
-        """
-        folder = 'install'
-        self.copy(pattern="*SDL_gpu*.h", dst=self._include_dir(), src=folder, keep_path=False)
-        self.copy(pattern="*.lib", dst="lib", src=folder, keep_path=False)
-        self.copy(pattern="*.dll*", dst="bin", src=folder, keep_path=False)
-        self.copy(pattern="*.a", dst="lib", src=folder, keep_path=False)
-        self.copy(pattern="*.so*", dst="lib", src=folder, keep_path=False)
-        self.copy(pattern="*.dylib*", dst="lib", src=folder, keep_path=False)
+        # Libs and headers are already copied via cmake.install()
+        self.copy(pattern="LICENSE")
+
+        #include_folder = os.path.join(self.source_subfolder, "include")
+        #self.copy(pattern="*", dst="include", src=include_folder)
+        #self.copy(pattern="*.dll", dst="bin", keep_path=False)
+        #self.copy(pattern="*.lib", dst="lib", keep_path=False)
+        #self.copy(pattern="*.a", dst="lib", keep_path=False)
+        #self.copy(pattern="*.so*", dst="lib", keep_path=False)
+        #self.copy(pattern="*.dylib", dst="lib", keep_path=False)
+
 
     def package_info(self):
-        self.cpp_info.libs = ["SDL_gpu"] if self.options.use_sdl1 else ["SDL2_gpu"]
-        self.cpp_info.includedirs += [self._include_dir()]
-
-    def _include_dir(self):
+        self.cpp_info.libs = tools.collect_libs(self)
+        if self.settings.os == 'Windows':
+            self.cpp_info.libs.append('opengl32')
         if self.options.use_sdl1:
-            return "include/SDL"
+            self.cpp_info.includedirs.append("include/SDL")
         else:
-            return "include/SDL2"
+            self.cpp_info.includedirs.append("include/SDL2")
+
+#class SdlGpuConan(ConanFile):
+#
+#
+#    def build(self):
+#        
+#
+#    def package(self):
+#        """ Define your conan structure: headers, libs and data. After building your
+#            project, this method is called to create a defined structure:
+#        """
+#        folder = 'install'
+#        self.copy(pattern="*SDL_gpu*.h", dst=self._include_dir(), src=folder, keep_path=False)
+#        self.copy(pattern="*.lib", dst="lib", src=folder, keep_path=False)
+#        self.copy(pattern="*.dll*", dst="bin", src=folder, keep_path=False)
+#        self.copy(pattern="*.a", dst="lib", src=folder, keep_path=False)
+#        self.copy(pattern="*.so*", dst="lib", src=folder, keep_path=False)
+#        self.copy(pattern="*.dylib*", dst="lib", src=folder, keep_path=False)
+#
+#    def package_info(self):
+#        self.cpp_info.libs = ["SDL_gpu"] if self.options.use_sdl1 else ["SDL2_gpu"]
+#        self.cpp_info.includedirs += [self._include_dir()]
+#
+#    def _include_dir(self):
+#        if self.options.use_sdl1:
+#            return "include/SDL"
+#        else:
+#            return "include/SDL2"

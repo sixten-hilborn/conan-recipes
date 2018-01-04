@@ -4,4 +4,4 @@ project(conan-sdl-gpu)
 include(conanbuildinfo.cmake)
 conan_basic_setup()
 
-add_subdirectory("./sdl-gpu")
+add_subdirectory("./source_subfolder")

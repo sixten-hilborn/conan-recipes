@@ -6,8 +6,8 @@ void main_loop(GPU_Target* screen)
     Uint8 done;
     SDL_Event event;
     
-    done = 0;
-    while(!done)
+    done = 1;
+    do
     {
         while(SDL_PollEvent(&event))
         {
@@ -28,6 +28,7 @@ void main_loop(GPU_Target* screen)
         
         GPU_Flip(screen);
     }
+    while(!done);
 }
 
 int main(int argc, char* argv[])
@@ -44,5 +45,3 @@ int main(int argc, char* argv[])
 	
 	return 0;
 }
-
-
