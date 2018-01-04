@@ -62,7 +62,6 @@ class SdlGpuConan(ConanFile):
 
 
     def source(self):
-        #commit = '6f6fb69b56363182d693b3fb8eb2b2b1853a9565'
         commit = 'daffef8128fe1ac24d44814ef0e51e68b97feb1f'
 
         source_url = "https://github.com/grimfang4/sdl-gpu"
@@ -95,15 +94,6 @@ class SdlGpuConan(ConanFile):
         # Libs and headers are already copied via cmake.install()
         self.copy(pattern="LICENSE")
 
-        #include_folder = os.path.join(self.source_subfolder, "include")
-        #self.copy(pattern="*", dst="include", src=include_folder)
-        #self.copy(pattern="*.dll", dst="bin", keep_path=False)
-        #self.copy(pattern="*.lib", dst="lib", keep_path=False)
-        #self.copy(pattern="*.a", dst="lib", keep_path=False)
-        #self.copy(pattern="*.so*", dst="lib", keep_path=False)
-        #self.copy(pattern="*.dylib", dst="lib", keep_path=False)
-
-
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
         if self.settings.os == 'Windows':
@@ -112,31 +102,3 @@ class SdlGpuConan(ConanFile):
             self.cpp_info.includedirs.append("include/SDL")
         else:
             self.cpp_info.includedirs.append("include/SDL2")
-
-#class SdlGpuConan(ConanFile):
-#
-#
-#    def build(self):
-#        
-#
-#    def package(self):
-#        """ Define your conan structure: headers, libs and data. After building your
-#            project, this method is called to create a defined structure:
-#        """
-#        folder = 'install'
-#        self.copy(pattern="*SDL_gpu*.h", dst=self._include_dir(), src=folder, keep_path=False)
-#        self.copy(pattern="*.lib", dst="lib", src=folder, keep_path=False)
-#        self.copy(pattern="*.dll*", dst="bin", src=folder, keep_path=False)
-#        self.copy(pattern="*.a", dst="lib", src=folder, keep_path=False)
-#        self.copy(pattern="*.so*", dst="lib", src=folder, keep_path=False)
-#        self.copy(pattern="*.dylib*", dst="lib", src=folder, keep_path=False)
-#
-#    def package_info(self):
-#        self.cpp_info.libs = ["SDL_gpu"] if self.options.use_sdl1 else ["SDL2_gpu"]
-#        self.cpp_info.includedirs += [self._include_dir()]
-#
-#    def _include_dir(self):
-#        if self.options.use_sdl1:
-#            return "include/SDL"
-#        else:
-#            return "include/SDL2"
