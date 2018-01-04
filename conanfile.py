@@ -66,9 +66,9 @@ class Sdl2MixerConan(ConanFile):
             self.requires("ogg/[>=1.3.3]@bincrafters/stable")
             self.requires("vorbis/[>=1.3.5]@bincrafters/stable")
         if self.options.with_libmikmod:
-            self.requires("libmikmod/[>=3.3.11.1]@hilborn/stable")
+            self.requires("libmikmod/[>=3.3.11.1]@sixten-hilborn/stable")
         if self.options.with_libmodplug:
-            self.requires("libmodplug/[>=0.8.8.5]@hilborn/stable")
+            self.requires("libmodplug/[>=0.8.8.5]@sixten-hilborn/stable")
         if self.options.with_libmad:
             self.requires("libmad/[>=0.15.1]@hilborn/stable")
 
