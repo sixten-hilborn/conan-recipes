@@ -1,21 +1,38 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from conan.packager import ConanMultiPackager
-from conans.tools import os_info
-import platform
+from conans import tools
+import importlib
+import os
 
+
+def get_module_location():
+    repo = os.getenv("CONAN_MODULE_REPO", "https://raw.githubusercontent.com/bincrafters/conan-templates")
+    branch = os.getenv("CONAN_MODULE_BRANCH", "package_tools_modules")
+    return repo + "/" + branch
+
+    
+def get_module_name():
+    return os.getenv("CONAN_MODULE_NAME", "build_template_default")
+
+    
+def get_module_filename():
+    return get_module_name() + ".py"
+    
+    
+def get_module_url():
+    return get_module_location() + "/" + get_module_filename()
+
+    
 if __name__ == "__main__":
-    builder = ConanMultiPackager()
-    builder.add_common_builds(shared_option_name="CEGUI:shared", pure_c=False)
-
-    extra_options = []
-    if os_info.is_macos:
-        extra_options += [("CEGUI:with_ois", "False"), ("CEGUI:with_sdl", "True")]  # Build with SDL since OIS doesn't work on macOS
-    # Disable VS2010 because of missing DirectX stuff
-    # Disable x86 Linux builds (OGRE x86 package does not work at the moment) and x86 Macos builds (libxml2 fails there)
-    builder.builds = [
-        [settings, dict(options.items() + extra_options), env_vars, build_requires]
-        for settings, options, env_vars, build_requires in builder.builds
-        if not (settings["compiler"] == "Visual Studio" and settings["compiler.version"] == "10")
-        and not ((os_info.is_linux or os_info.is_macos) and settings["arch"] == "x86")
-    ]
+    
+    tools.download(get_module_url(), get_module_filename(), overwrite=True)
+    
+    module = importlib.import_module(get_module_name())
+    
+    builder = module.get_builder()
+    
     builder.run()
 
+    
