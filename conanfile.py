@@ -7,7 +7,7 @@ import os
 
 class SdlGpuConan(ConanFile):
     name = "sdl_gpu"
-    version = "0.11.0"
+    version = "20171201"
     url = "https://github.com/sixten-hilborn/conan-sdl_gpu"
     description = "A library for high-performance, modern 2D graphics with SDL written in C."
     
