@@ -33,7 +33,6 @@ if __name__ == "__main__":
     
     builder = module.get_builder()
     builder.add_remote_safe('bincrafters', 'https://api.bintray.com/conan/bincrafters/public-conan')
-    builder.add_remote_safe('dimi309', 'https://api.bintray.com/conan/dimi309/conan-packages')
     builder.run()
 
     
