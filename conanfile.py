@@ -41,7 +41,6 @@ class CeguiConan(ConanFile):
         "with_opengl3=False",
         "with_opengles=False",
         "with_sdl=False",
-        "libxml2:shared=True"
     )
     
     # Custom attributes for Bincrafters recipe conventions
