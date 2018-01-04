@@ -82,7 +82,7 @@ class CeguiConan(ConanFile):
         #Rename to "source_subfolder" is a convention to simplify later steps
         os.rename(extracted_dir, self.source_subfolder)
 
-        _apply_patches('patches', self.source_subfolder)
+        self._apply_patches('patches', self.source_subfolder)
 
 
     def build(self):
@@ -103,30 +103,19 @@ class CeguiConan(ConanFile):
         cmake.definitions['CEGUI_BUILD_RENDERER_OPENGLES'] = self.options.with_opengles
         cmake.configure(build_folder=self.build_subfolder)
         cmake.build()
-        cmake.install()
 
 
     def package(self):
         # If the CMakeLists.txt has a proper install method, the steps below may be redundant
         # If so, you can replace all the steps below with the word "pass"
-        include_folder = os.path.join(self.source_subfolder, "include")
         self.copy(pattern="LICENSE")
-        self.copy(pattern="*", dst="include", src=include_folder)
-        self.copy(pattern="*.dll", dst="bin", keep_path=False)
-        self.copy(pattern="*.lib", dst="lib", keep_path=False)
-        self.copy(pattern="*.a", dst="lib", keep_path=False)
-        self.copy(pattern="*.so*", dst="lib", keep_path=False)
-        self.copy(pattern="*.dylib", dst="lib", keep_path=False)
-
-        #lib_dir = "_build/{0}/lib".format(self.folder)
-        #bin_dir = "_build/{0}/bin".format(self.folder)
-        #self.copy(pattern="*.h", dst="include/CEGUI", src="{0}/cegui/include/CEGUI".format(self.folder))
-        #self.copy(pattern="*.h", dst="include/CEGUI", src="_build/{0}/cegui/include/CEGUI".format(self.folder))
-        #self.copy("*.lib", dst="lib", src=lib_dir, keep_path=False)
-        #self.copy("*.a", dst="lib", src=lib_dir, keep_path=False)
-        #self.copy("*.so*", dst="lib", src=lib_dir, keep_path=False, links=True)
-        #self.copy("*.dll", dst="bin", src=bin_dir, keep_path=False)
-        #self.copy("*.dylib", dst="lib", src=bin_dir, keep_path=False)
+        self.copy(pattern="*", dst="include/CEGUI", src="{0}/cegui/include/CEGUI".format(self.source_subfolder))
+        self.copy(pattern="*", dst="include/CEGUI", src="{0}/{1}/cegui/include/CEGUI".format(self.build_subfolder, self.source_subfolder))
+        self.copy(pattern="*.dll", dst="bin", src=self.build_subfolder, keep_path=False)
+        self.copy(pattern="*.lib", dst="lib", src=self.build_subfolder, keep_path=False)
+        self.copy(pattern="*.a", dst="lib", src=self.build_subfolder, keep_path=False)
+        self.copy(pattern="*.so*", dst="lib", src=self.build_subfolder, keep_path=False)
+        self.copy(pattern="*.dylib", dst="lib", src=self.build_subfolder, keep_path=False)
 
         
     def package_info(self):
