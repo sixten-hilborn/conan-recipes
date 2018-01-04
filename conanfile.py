@@ -1,13 +1,28 @@
-from conans import ConanFile, CMake
-from conans.tools import download, unzip, replace_in_file
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from conans import ConanFile, CMake, tools
 import os
 import shutil
 
+
 class SmpegConan(ConanFile):
-    name = "smpeg"
+    name = "smpeg2"
     version = "2.0.0"
+    url = "https://github.com/sixten-hilborn/conan-smpeg"
     description = "smpeg is an mpeg decoding library, which runs on just about any platform"
-    folder = "smpeg2-%s" % version
+
+    # Indicates License type of the packaged library
+    license = "Library GPL 2.0 - https://www.gnu.org/licenses/old-licenses/lgpl-2.0.html"
+
+    # Packages the license for the conanfile.py
+    exports = ["LICENSE.md"]
+
+    # Remove following lines if the target lib does not use cmake.
+    exports_sources = ["CMakeLists.txt"]
+    generators = "cmake" 
+
+    # Options may need to change depending on the packaged library. 
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
@@ -16,14 +31,18 @@ class SmpegConan(ConanFile):
     default_options = (
         'fPIC=True'
     )
-    generators = "cmake"
-    requires = "SDL2/2.0.5@lasote/ci"
-    exports = ["CMakeLists.txt"]
-    url = "https://github.com/sixten-hilborn/conan-smpeg"
-    license = "Library GPL 2.0 - https://www.gnu.org/licenses/old-licenses/lgpl-2.0.html"
+
+    # Custom attributes for Bincrafters recipe conventions
+    source_subfolder = "source_subfolder"
+    build_subfolder = "build_subfolder"
+    
+    # Use version ranges for dependencies unless there's a reason not to
+    requires = (
+        "sdl2/[>=2.0.5]@bincrafters/stable"
+    )
 
     def configure(self):
-        sdl_shared = self.options['SDL2'].shared
+        sdl_shared = self.options['sdl2'].shared
         if sdl_shared is None:
             sdl_shared = False
 
@@ -31,42 +50,45 @@ class SmpegConan(ConanFile):
             self.options.shared = sdl_shared
 
         if self.options.shared != sdl_shared:
-            message = 'smpeg:shared ({0}) must be the same as SDL2:shared ({1})'.format(
+            message = 'smpeg:shared ({0}) must be the same as sdl2:shared ({1})'.format(
                 self.options.shared, sdl_shared)
             raise Exception(message)
 
 
     def source(self):
-        zip_name = "%s.tar.gz" % self.folder
-        download("https://www.libsdl.org/projects/smpeg/release/%s" % zip_name, zip_name)
-        unzip(zip_name)
-        os.unlink(zip_name)
-        shutil.move("CMakeLists.txt", "%s/CMakeLists.txt" % self.folder)
+        extracted_dir = self.name + "-" + self.version
+        source_url = "https://www.libsdl.org/projects/smpeg/release"
+        tools.get("{0}/{1}.tar.gz".format(source_url, extracted_dir))
+
+        #Rename to "source_subfolder" is a convention to simplify later steps
+        os.rename(extracted_dir, self.source_subfolder)
+
+        shutil.move("CMakeLists.txt", "%s/CMakeLists.txt" % self.source_subfolder)
         # Fix "memset" missing
-        replace_in_file('%s/audio/MPEGaudio.cpp' % self.folder, '#include "MPEGaudio.h"', '''#include "MPEGaudio.h"
+        tools.replace_in_file('%s/audio/MPEGaudio.cpp' % self.source_subfolder, '#include "MPEGaudio.h"', '''#include "MPEGaudio.h"
 #include <string.h>''')
 
+        
     def build(self):
         cmake = CMake(self)
-        defs = {
-            'CMAKE_INSTALL_PREFIX': os.path.join(self.conanfile_directory, 'install'),
-            'CMAKE_POSITION_INDEPENDENT_CODE': self.options.fPIC
-        }
-        src = os.path.join(self.conanfile_directory, self.folder)
-        cmake.configure(build_dir='build', source_dir=src, defs=defs)
-        cmake.build(target='install')
+        cmake.definitions["CMAKE_POSITION_INDEPENDENT_CODE"] = self.options.fPIC
+        cmake.configure(build_folder=self.build_subfolder, source_folder=self.source_subfolder)
+        cmake.build()
+        cmake.install()
 
+        
     def package(self):
-        """ Define your conan structure: headers, libs and data. After building your
-            project, this method is called to create a defined structure:
-        """
-        folder = 'install'
-        self.copy(pattern="*.h", dst="include", src=folder, keep_path=False)
-        self.copy(pattern="*.lib", dst="lib", src=folder, keep_path=False)
-        self.copy(pattern="*.dll*", dst="bin", src=folder, keep_path=False)
-        self.copy(pattern="*.a", dst="lib", src=folder, keep_path=False)
-        self.copy(pattern="*.so*", dst="lib", src=folder, keep_path=False)
-        self.copy(pattern="*.dylib*", dst="lib", src=folder, keep_path=False)
+        # If the CMakeLists.txt has a proper install method, the steps below may be redundant
+        # If so, you can replace all the steps below with the word "pass"
+        include_folder = os.path.join(self.source_subfolder, "include")
+        self.copy(pattern="LICENSE")
+        self.copy(pattern="*", dst="include", src=include_folder)
+        self.copy(pattern="*.dll", dst="bin", keep_path=False)
+        self.copy(pattern="*.lib", dst="lib", keep_path=False)
+        self.copy(pattern="*.a", dst="lib", keep_path=False)
+        self.copy(pattern="*.so*", dst="lib", keep_path=False)
+        self.copy(pattern="*.dylib", dst="lib", keep_path=False)
 
+        
     def package_info(self):
-        self.cpp_info.libs = ["smpeg2"]
+        self.cpp_info.libs = tools.collect_libs(self)
