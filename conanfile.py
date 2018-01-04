@@ -23,8 +23,14 @@ class LuaConan(ConanFile):
     
     # Options may need to change depending on the packaged library. 
     settings = "os", "arch", "compiler", "build_type"
-    options = {"shared": [True, False]}
-    default_options = "shared=False"
+    options = {
+        "shared": [True, False],
+        "fPIC": [True, False]
+    }
+    default_options = (
+        "shared=False",
+        "fPIC=True"
+    )
     
     # Custom attributes for Bincrafters recipe conventions
     source_subfolder = "source_subfolder"
@@ -43,6 +49,7 @@ class LuaConan(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.definitions['BUILD_TESTING'] = False
+        cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
         cmake.definitions['LUA_BUILD_WLUA'] = False
         cmake.definitions['LUA_BUILD_AS_SHARED'] = self.options.shared
         cmake.definitions['SKIP_INSTALL_DATA'] = True
