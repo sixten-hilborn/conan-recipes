@@ -135,7 +135,7 @@ endif()
 
 if(SDLMIXER_SUPPORT_FLAC_MUSIC)
 	add_definitions(-DFLAC_MUSIC)
-	list(APPEND SDLMIXER_LIBRARIES CONAN_PKG::FLAC)
+	list(APPEND SDLMIXER_LIBRARIES CONAN_PKG::flac)
 endif()
 
 include_directories(./)

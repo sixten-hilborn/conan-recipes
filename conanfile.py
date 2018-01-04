@@ -1,4 +1,4 @@
-from conans import ConanFile, ConfigureEnvironment, CMake
+from conans import ConanFile, CMake
 from conans.tools import download, unzip, replace_in_file
 import os
 import shutil
@@ -30,7 +30,7 @@ class Sdl2MixerConan(ConanFile):
         'with_libmad=False'
     )
     generators = "cmake"
-    requires = "SDL2/2.0.5@lasote/ci"
+    requires = "sdl2/[>=2.0.6]@bincrafters/stable"
     exports = ["CMakeLists.txt"]
     url = "https://github.com/sixten-hilborn/conan-sdl2_mixer"
     license = "zlib License - https://opensource.org/licenses/Zlib"
@@ -42,11 +42,10 @@ class Sdl2MixerConan(ConanFile):
         if self.options.with_smpeg:
             self.requires("smpeg/2.0.0@hilborn/stable")
         if self.options.with_flac:
-            self.requires("FLAC/1.3.2@GatorQue/stable")
+            self.requires("flac/[>=1.3.2]@bincrafters/stable")
         if self.options.with_ogg:
-            # self.requires("ogg/1.3.2@coding3d/stable")
-            self.requires("ogg/1.3.2@GatorQue/stable")
-            self.requires("vorbis/1.3.5@coding3d/stable")
+            self.requires("ogg/[>=1.3.3]@bincrafters/stable")
+            self.requires("vorbis/[>=1.3.5]@bincrafters/stable")
         if self.options.with_libmikmod:
             self.requires("libmikmod/3.3.11.1@hilborn/stable")
         if self.options.with_libmodplug:
