@@ -1,7 +1,6 @@
 import os
 import shutil
-from conans import ConanFile, CMake
-from conans.tools import get
+from conans import ConanFile, CMake, tools
 
 
 class SdlGpuConan(ConanFile):
@@ -43,19 +42,24 @@ class SdlGpuConan(ConanFile):
     def requirements(self):
         if self.options.use_sdl1:
             # Does not exist at the moment, but can be overridden
-            self.requires("SDL/1.2.15@conan/stable")
+            self.requires("SDL/[>=1.2.15]@conan/stable")
         else:
-            self.requires("SDL2/2.0.5@lasote/ci")
+            self.requires("SDL2/[>=2.0.5]@bincrafters/testing")
 
     def source(self):
-        commit = '6f6fb69b56363182d693b3fb8eb2b2b1853a9565'
-        get('https://github.com/grimfang4/sdl-gpu/archive/{0}.tar.gz'.format(commit))
+        #commit = '6f6fb69b56363182d693b3fb8eb2b2b1853a9565'
+        commit = 'daffef8128fe1ac24d44814ef0e51e68b97feb1f'
+        tools.get('https://github.com/grimfang4/sdl-gpu/archive/{0}.tar.gz'.format(commit))
         shutil.move('sdl-gpu-{0}'.format(commit), 'sdl-gpu')
 
     def build(self):
+        tools.replace_in_file(
+            'sdl-gpu/scripts/FindSDL2.cmake',
+            'find_library(SDL2_LIBRARY NAMES SDL2 sdl2 sdl2 sdl-2.0',
+            'find_library(SDL2_LIBRARY NAMES SDL2 sdl2 sdl2 sdl-2.0 SDL2d')
         cmake = CMake(self)
         defs = {
-            'CMAKE_INSTALL_PREFIX': os.path.join(self.conanfile_directory, 'install'),
+            'CMAKE_INSTALL_PREFIX': os.path.join(self.build_folder, 'install'),
             'CMAKE_POSITION_INDEPENDENT_CODE': self.options.fPIC,
             'SDL_gpu_INSTALL': True,
             'SDL_gpu_BUILD_DEMOS': False,
