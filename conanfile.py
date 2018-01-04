@@ -3,6 +3,7 @@
 
 from conans import ConanFile, CMake, tools
 import os
+import shutil
 
 
 class Sdl2MixerConan(ConanFile):
@@ -58,7 +59,7 @@ class Sdl2MixerConan(ConanFile):
 
     def requirements(self):
         if self.options.with_smpeg:
-            self.requires("smpeg/[>=2.0.0]@hilborn/stable")
+            self.requires("smpeg2/[>=2.0.0]@sixten-hilborn/stable")
         if self.options.with_flac:
             self.requires("flac/[>=1.3.2]@bincrafters/stable")
         if self.options.with_ogg:
@@ -74,7 +75,7 @@ class Sdl2MixerConan(ConanFile):
 
     def source(self):
         extracted_dir = "SDL2_mixer-" + self.version
-        tools.get("https://www.libsdl.org/projects/SDL_mixer/release/{0}.tar.gz".format(zip_name))
+        tools.get("https://www.libsdl.org/projects/SDL_mixer/release/{0}.tar.gz".format(extracted_dir))
 
         #Rename to "source_subfolder" is a convention to simplify later steps
         os.rename(extracted_dir, self.source_subfolder)
