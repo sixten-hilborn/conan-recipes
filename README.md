@@ -2,7 +2,7 @@
 
 | Bintray | Appveyor | Travis | 
 |---------|-----------|--------|
-|[ ![Download](https://api.bintray.com/packages/sixten-hilborn/public-conan/lua%3Asixten-hilborn/images/download.svg) ](https://bintray.com/sixten-hilborn/public-conan/sdl2_mixer%3Asixten-hilborn/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/1ckjeutqc389otfg/branch/master?svg=true)](https://ci.appveyor.com/project/sixten-hilborn/conan-sdl2-mixer/branch/master)|[![Build Status](https://travis-ci.org/sixten-hilborn/conan-sdl2_mixer.svg?branch=master)](https://travis-ci.org/sixten-hilborn/conan-sdl2_mixer)|
+|[ ![Download](https://api.bintray.com/packages/sixten-hilborn/public-conan/sdl2_mixer%3Asixten-hilborn/images/download.svg) ](https://bintray.com/sixten-hilborn/public-conan/sdl2_mixer%3Asixten-hilborn/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/1ckjeutqc389otfg/branch/master?svg=true)](https://ci.appveyor.com/project/sixten-hilborn/conan-sdl2-mixer/branch/master)|[![Build Status](https://travis-ci.org/sixten-hilborn/conan-sdl2_mixer.svg?branch=master)](https://travis-ci.org/sixten-hilborn/conan-sdl2_mixer)|
 
 [Conan.io](https://conan.io) package for [SDL2_mixer](https://www.libsdl.org/projects/SDL_mixer) library
 
