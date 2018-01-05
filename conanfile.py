@@ -60,6 +60,11 @@ class SdlGpuConan(ConanFile):
         else:
             self.requires("sdl2/[>=2.0.5]@bincrafters/stable")
 
+    def system_requirements(self):
+        if self.settings.os == "Linux" and tools.os_info.with_apt:
+            installer = tools.SystemPackageTool()
+            installer.install('mesa-common-dev')
+
 
     def source(self):
         commit = 'daffef8128fe1ac24d44814ef0e51e68b97feb1f'
