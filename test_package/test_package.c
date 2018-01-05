@@ -31,9 +31,9 @@ void main_loop(GPU_Target* screen)
     while(!done);
 }
 
-int main(int argc, char* argv[])
+int demo()
 {
-	GPU_Target* screen;
+    GPU_Target* screen;
 	
 	screen = GPU_Init(800, 600, GPU_DEFAULT_INIT_FLAGS);
 	if(screen == NULL)
@@ -44,4 +44,12 @@ int main(int argc, char* argv[])
 	GPU_Quit();
 	
 	return 0;
+}
+
+int main(int argc, char* argv[])
+{
+    if (argc > 3)
+        return demo();
+    else
+        return 0;
 }
