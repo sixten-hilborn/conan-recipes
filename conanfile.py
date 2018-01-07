@@ -69,7 +69,7 @@ class CeguiConan(ConanFile):
         if self.options.with_opengl or self.options.with_opengl3 or self.options.with_opengles:
             #self.requires("glew/2.0.0@coding3d/stable")
             self.requires("glew/1.13.0@coding3d/stable")
-            self.requires("glm/[>=0.9.8.5]@g-truc/stable")
+            self.requires("glm/[>=0.9.8]@g-truc/stable")
             self.requires("glfw/[>=3.2.1]@bincrafters/stable")
 
 
