@@ -96,7 +96,7 @@ class CeguiConan(ConanFile):
         cmake.definitions['CEGUI_BUILD_PYTHON_MODULES'] = False
         cmake.definitions['CEGUI_BUILD_APPLICATION_TEMPLATES'] = False
         cmake.definitions['CEGUI_HAS_FREETYPE'] = True
-        cmake.definitions['CEGUI_OPTION_DEFAULT_IMAGECODEC'] = 'SDL2ImageCodec' if self.options.with_sdl else 'FreeImageCodec'
+        cmake.definitions['CEGUI_OPTION_DEFAULT_IMAGECODEC'] = 'SDL2ImageCodec' if self.options.with_sdl else 'FreeImageImageCodec'
         cmake.definitions['CEGUI_BUILD_IMAGECODEC_FREEIMAGE'] = not self.options.with_sdl
         cmake.definitions['CEGUI_BUILD_IMAGECODEC_SDL2'] = self.options.with_sdl
         cmake.definitions['CEGUI_BUILD_RENDERER_OGRE'] = self.options.with_ogre
