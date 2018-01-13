@@ -26,6 +26,7 @@ class CeguiConan(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
+        "fPIC": [True, False],
         "with_ogre": [True, False],
         "with_ois": [True, False],
         "with_opengl": [True, False],
@@ -35,6 +36,7 @@ class CeguiConan(ConanFile):
     }
     default_options = (
         "shared=True",
+        "fPIC=True",
         "with_ogre=False",
         "with_ois=False",
         "with_opengl=False",
@@ -89,6 +91,7 @@ class CeguiConan(ConanFile):
             tools.replace_in_file('{0}/CMakeLists.txt'.format(self.source_subfolder), 'find_package(OIS)', '')
 
         cmake = CMake(self)
+        cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
         cmake.definitions['CEGUI_SAMPLES_ENABLED'] = False
         cmake.definitions['CEGUI_BUILD_PYTHON_MODULES'] = False
         cmake.definitions['CEGUI_BUILD_APPLICATION_TEMPLATES'] = False
