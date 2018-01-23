@@ -103,11 +103,12 @@ class Sdl2MixerConan(ConanFile):
         include_folder = os.path.join(self.source_subfolder, "include")
         self.copy(pattern="LICENSE")
         self.copy(pattern="*SDL_mixer.h", dst="include/SDL2", src=include_folder)
-        self.copy(pattern="*.dll", dst="bin", keep_path=False)
-        self.copy(pattern="*.lib", dst="lib", keep_path=False)
-        self.copy(pattern="*.a", dst="lib", keep_path=False)
-        self.copy(pattern="*.so*", dst="lib", keep_path=False)
-        self.copy(pattern="*.dylib", dst="lib", keep_path=False)
+        self.copy(pattern="*.dll", dst="bin", src=self.build_subfolder, keep_path=False)
+        self.copy(pattern="*.lib", dst="lib", src=self.build_subfolder, keep_path=False)
+        self.copy(pattern="*.a", dst="lib", src=self.build_subfolder, keep_path=False)
+        self.copy(pattern="*.so", dst="lib", src=self.build_subfolder, keep_path=False)
+        self.copy(pattern="*.so.*", dst="lib", src=self.build_subfolder, keep_path=False)
+        self.copy(pattern="*.dylib", dst="lib", src=self.build_subfolder, keep_path=False)
 
 
     def package_info(self):
