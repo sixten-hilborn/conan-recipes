@@ -16,21 +16,22 @@ set(SDLMIXER_LIBRARIES "")
 if (WIN32)
 	set(SDLMIXER_SUPPORT_CMD_MUSIC OFF CACHE BOOL "Support for external command for playing music")
 	set(SDLMIXER_SUPPORT_WAV_MUSIC ON CACHE BOOL "Support for WAV music")
-	set(SDLMIXER_SUPPORT_MODPLUG_MUSIC OFF CACHE BOOL "Support for ModPlug music")
-	set(SDLMIXER_SUPPORT_MOD_MUSIC OFF CACHE BOOL "Support for Mod music")
+	set(SDLMIXER_SUPPORT_MOD_MODPLUG_MUSIC OFF CACHE BOOL "Support for ModPlug music")
+	set(SDLMIXER_SUPPORT_MOD_MIDKMOD_MUSIC OFF CACHE BOOL "Support for Mod music")
 	set(SDLMIXER_SUPPORT_MID_MUSIC ON CACHE BOOL "Support for MIDI music")
 		set(SDLMIXER_SUPPORT_MID_MUSIC_TIMIDITY ON CACHE BOOL "Support for MIDI over TIMIDITI music")
 		set(SDLMIXER_SUPPORT_MID_MUSIC_FLUIDSYNTH OFF CACHE BOOL "Support for MIDI over FluidSynth music")
 		set(SDLMIXER_SUPPORT_MID_MUSIC_NATIVE ON CACHE BOOL "Support for native MIDI music")
 	set(SDLMIXER_SUPPORT_OGG_MUSIC ON CACHE BOOL "Support for OggVorbis music")
-	set(SDLMIXER_SUPPORT_MP3_MUSIC OFF CACHE BOOL "Support for MP3 music")
+	set(SDLMIXER_SUPPORT_MP3_SMPEG_MUSIC OFF CACHE BOOL "Support for MP3 smpeg2 music")
+	set(SDLMIXER_SUPPORT_MP3_MPG123_MUSIC ON CACHE BOOL "Support for MP3 mpg123 music")
 	set(SDLMIXER_SUPPORT_MP3_MAD_MUSIC OFF CACHE BOOL "Support for MP3 MAD music")
 	set(SDLMIXER_SUPPORT_FLAC_MUSIC ON CACHE BOOL "Support for FLAC music")
 else()
 	set(SDLMIXER_SUPPORT_CMD_MUSIC ON CACHE BOOL "Support for external command for playing music")
 	set(SDLMIXER_SUPPORT_WAV_MUSIC ON CACHE BOOL "Support for WAV music")
-	set(SDLMIXER_SUPPORT_MODPLUG_MUSIC ON CACHE BOOL "Support for ModPlug music")
-	set(SDLMIXER_SUPPORT_MOD_MUSIC ON CACHE BOOL "Support for Mod music")
+	set(SDLMIXER_SUPPORT_MOD_MODPLUG_MUSIC ON CACHE BOOL "Support for ModPlug music")
+	set(SDLMIXER_SUPPORT_MOD_MIDKMOD_MUSIC ON CACHE BOOL "Support for Mod music")
 	set(SDLMIXER_SUPPORT_MID_MUSIC ON CACHE BOOL "Support for MIDI music")
 		set(SDLMIXER_SUPPORT_MID_MUSIC_TIMIDITY ON CACHE BOOL "Support for MIDI over TIMIDITI music")
 		set(SDLMIXER_SUPPORT_MID_MUSIC_FLUIDSYNTH ON CACHE BOOL "Support for MIDI over FluidSynth music")
@@ -40,55 +41,49 @@ else()
 			set(SDLMIXER_SUPPORT_MID_MUSIC_NATIVE OFF CACHE BOOL "Support for native MIDI music")
 		endif()
 	set(SDLMIXER_SUPPORT_OGG_MUSIC ON CACHE BOOL "Support for OggVorbis music")
-	set(SDLMIXER_SUPPORT_MP3_MUSIC ON CACHE BOOL "Support for MP3 music")
+	set(SDLMIXER_SUPPORT_MP3_SMPEG_MUSIC ON CACHE BOOL "Support for MP3 smpeg2 music")
+	set(SDLMIXER_SUPPORT_MP3_MPG123_MUSIC ON CACHE BOOL "Support for MP3 mpg123 music")
 	set(SDLMIXER_SUPPORT_MP3_MAD_MUSIC ON CACHE BOOL "Support for MP3 MAD music")
 	set(SDLMIXER_SUPPORT_FLAC_MUSIC ON CACHE BOOL "Support for FLAC music")
 endif()
 
 if(SDLMIXER_SUPPORT_CMD_MUSIC)
-	add_definitions(-DCMD_MUSIC)
+	add_definitions(-DMUSIC_CMD)
 endif()
 if(SDLMIXER_SUPPORT_WAV_MUSIC)
-	add_definitions(-DWAV_MUSIC)
+	add_definitions(-DMUSIC_WAV)
 endif()
-if(SDLMIXER_SUPPORT_MODPLUG_MUSIC)
-	add_definitions(-DMODPLUG_MUSIC)
+if(SDLMIXER_SUPPORT_MOD_MODPLUG_MUSIC)
+	add_definitions(-DMUSIC_MOD_MODPLUG)
 	list(APPEND SDLMIXER_LIBRARIES CONAN_PKG::libmodplug)
 endif()
-if(SDLMIXER_SUPPORT_MOD_MUSIC)
-	add_definitions(-DMOD_MUSIC)
+if(SDLMIXER_SUPPORT_MOD_MIDKMOD_MUSIC)
+	add_definitions(-DMUSIC_MOD_MODPLUG)
 	list(APPEND SDLMIXER_LIBRARIES CONAN_PKG::libmikmod)
 endif()
 
 if(SDLMIXER_SUPPORT_MID_MUSIC)
-	add_definitions(-DMID_MUSIC)
 	if(SDLMIXER_SUPPORT_MID_MUSIC_TIMIDITY)
-		add_definitions(-DUSE_TIMIDITY_MIDI)
+		add_definitions(-DMUSIC_MID_TIMIDITY)
 		include_directories(timidity)
 		set(SDLMIXER_TIMIDITY_SRC
 			timidity/common.c
-			timidity/ctrlmode.c
-			timidity/filter.c
 			timidity/instrum.c
 			timidity/mix.c
 			timidity/output.c
 			timidity/playmidi.c
 			timidity/readmidi.c
 			timidity/resample.c
-			timidity/sdl_a.c
-			timidity/sdl_c.c
 			timidity/tables.c
 			timidity/timidity.c
 		)
 		
 		list(APPEND SDLMIXER_ADDITIONAL_SRC ${SDLMIXER_TIMIDITY_SRC})
-
-	endif()
-	if(SDLMIXER_SUPPORT_MID_MUSIC_FLUIDSYNTH)
-		add_definitions(-DUSE_FLUIDSYNTH_MIDI)
+	else()
+	MUSIC_MID_NATIVE
 	endif()
 	if(SDLMIXER_SUPPORT_MID_MUSIC_NATIVE)
-		add_definitions(-DUSE_NATIVE_MIDI)
+		add_definitions(-DMUSIC_MID_NATIVE)
 		include_directories(native_midi)
 		set(SDLMIXER_NATIVEMIDI_SRC
 			native_midi/native_midi_common.c
@@ -107,18 +102,26 @@ if(SDLMIXER_SUPPORT_MID_MUSIC)
 endif()
 
 if(SDLMIXER_SUPPORT_OGG_MUSIC)
-	add_definitions(-DOGG_MUSIC)
+	add_definitions(-DMUSIC_OGG)
 	list(APPEND SDLMIXER_LIBRARIES CONAN_PKG::ogg)
 	list(APPEND SDLMIXER_LIBRARIES CONAN_PKG::vorbis)
 endif()
 
-if(SDLMIXER_SUPPORT_MP3_MUSIC)
+if(SDLMIXER_SUPPORT_MP3_SMPEG_MUSIC)
 	add_definitions(-DMP3_MUSIC)
+	add_definitions(-DMUSIC_MP3_SMPEG)
 	list(APPEND SDLMIXER_LIBRARIES CONAN_PKG::smpeg2)
 endif()
 
+if(SDLMIXER_SUPPORT_MP3_MPG123_MUSIC)
+	add_definitions(-DMUSIC_MP3_MPG123)
+	list(APPEND SDLMIXER_LIBRARIES CONAN_PKG::mpg123)
+endif()
+
 if(SDLMIXER_SUPPORT_MP3_MAD_MUSIC)
-	add_definitions(-DMP3_MAD_MUSIC)
+	add_definitions(-DMUSIC_MP3_MAD)
+	# GPL extensions?
+	# add_definitions(-DMUSIC_MP3_MAD_GPL_DITHERING)
 
 	if (("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "x86_64|AMD64"))
 		add_definitions(-DFPM_64BIT)
@@ -134,38 +137,34 @@ if(SDLMIXER_SUPPORT_MP3_MAD_MUSIC)
 endif()
 
 if(SDLMIXER_SUPPORT_FLAC_MUSIC)
-	add_definitions(-DFLAC_MUSIC)
+	add_definitions(-DMUSIC_FLAC)
 	list(APPEND SDLMIXER_LIBRARIES CONAN_PKG::flac)
 endif()
 
 include_directories(./)
 
 add_library(SDL2_mixer
-	dynamic_flac.c
-	dynamic_fluidsynth.c
-	dynamic_mod.c
-	dynamic_modplug.c
-	dynamic_mp3.c
-	dynamic_ogg.c
 	effect_position.c
 	effect_stereoreverse.c
 	effects_internal.c
-	fluidsynth.c
 	load_aiff.c
-	load_flac.c
-	load_mp3.c
-	load_ogg.c
 	load_voc.c
 	mixer.c
 	music.c
 	music_cmd.c
 	music_flac.c
+	music_fluidsynth.c
 	music_mad.c
-	music_mod.c
+	music_mikmod.c
 	music_modplug.c
+	music_mpg123.c
+	music_nativemidi.c
 	music_ogg.c
-	wavestream.c
-	${SDLMIXER_ADDITIONAL_SRC})
+	music_smpeg.c
+	music_timidity.c
+	music_wav.c
+	${SDLMIXER_ADDITIONAL_SRC}
+)
 	
 target_link_libraries(SDL2_mixer CONAN_PKG::sdl2 ${SDLMIXER_LIBRARIES})
 

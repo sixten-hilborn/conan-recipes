@@ -8,7 +8,7 @@ import shutil
 
 class Sdl2MixerConan(ConanFile):
     name = "sdl2_mixer"
-    version = "2.0.1"
+    version = "2.0.2"
     url = "https://github.com/sixten-hilborn/conan-sdl2_mixer"
     description = "A sample multi-channel audio mixer library."
 
@@ -28,6 +28,7 @@ class Sdl2MixerConan(ConanFile):
         "shared": [True, False],
         "fPIC": [True, False],
         "with_smpeg": [True, False],
+        "with_mpg123": [True, False],
         "with_flac": [True, False],
         "with_ogg": [True, False],
         "with_libmikmod": [True, False],
@@ -37,7 +38,8 @@ class Sdl2MixerConan(ConanFile):
     default_options = (
         'shared=False',
         'fPIC=True',
-        'with_smpeg=True',
+        'with_smpeg=False',
+        'with_mpg123=True',
         'with_flac=True',
         'with_ogg=True',
         'with_libmikmod=True',
@@ -60,6 +62,8 @@ class Sdl2MixerConan(ConanFile):
     def requirements(self):
         if self.options.with_smpeg:
             self.requires("smpeg2/[>=2.0.0]@sixten-hilborn/stable")
+        if self.options.with_mpg123:
+            self.requires("mpg123/1.25.6@sixten-hilborn/stable")
         if self.options.with_flac:
             self.requires("flac/[>=1.3.2]@bincrafters/stable")
         if self.options.with_ogg:
@@ -83,13 +87,16 @@ class Sdl2MixerConan(ConanFile):
 
 
     def build(self):
+        tools.replace_in_file("{0}/music_smpeg.c".format(self.source_subfolder), 'smpeg.SMPEG_actualSpec(mp3, &music_spec);', 'smpeg.SMPEG_actualSpec(music->mp3, &music_spec);')
+        tools.replace_in_file("{0}/music_smpeg.c".format(self.source_subfolder), 'stream += (len - left);', 'stream += (len - left); }')
         cmake = CMake(self)
         cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
         cmake.definitions['SDLMIXER_SUPPORT_OGG_MUSIC'] = self.options.with_ogg
-        cmake.definitions['SDLMIXER_SUPPORT_MP3_MUSIC'] = self.options.with_smpeg
+        cmake.definitions['SDLMIXER_SUPPORT_MP3_SMPEG_MUSIC'] = self.options.with_smpeg
+        cmake.definitions['SDLMIXER_SUPPORT_MP3_MPG123_MUSIC'] = self.options.with_mpg123
         cmake.definitions['SDLMIXER_SUPPORT_MP3_MAD_MUSIC'] = self.options.with_libmad
         cmake.definitions['SDLMIXER_SUPPORT_FLAC_MUSIC'] = self.options.with_flac
-        cmake.definitions['SDLMIXER_SUPPORT_MODPLUG_MUSIC'] = self.options.with_libmodplug
+        cmake.definitions['SDLMIXER_SUPPORT_MOD_MODPLUG_MUSIC'] = self.options.with_libmodplug
         cmake.definitions['SDLMIXER_SUPPORT_MOD_MUSIC'] = self.options.with_libmikmod
         cmake.definitions['SDLMIXER_SUPPORT_MID_MUSIC_FLUIDSYNTH'] = False
         cmake.configure(build_folder=self.build_subfolder, source_folder=self.source_subfolder)
