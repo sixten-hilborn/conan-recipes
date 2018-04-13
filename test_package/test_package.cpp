@@ -14,8 +14,7 @@ void try_load(const char* file)
 	}
 }
 
-
-int main(int argc, char** args)
+int try_sdl_mixer()
 {
 	if (SDL_Init(SDL_INIT_AUDIO) != 0)
 	{
@@ -34,6 +33,13 @@ int main(int argc, char** args)
 
 	Mix_CloseAudio();
 	SDL_Quit();
-
 	return 0;
+}
+
+
+int main(int argc, char** args)
+{
+	std::cout << "Compile, link and run successfully" << std::endl;
+	return 0;
+	// return try_sdl_mixer();
 }
