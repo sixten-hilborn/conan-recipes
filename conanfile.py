@@ -1,9 +1,6 @@
 import os
 import fnmatch
-from conans import ConanFile
-from conans.tools import get, patch, replace_in_file
-from conans import CMake
-from multiprocessing import cpu_count
+from conans import ConanFile, CMake, tools
 
 
 def apply_patches(source, dest):
@@ -11,7 +8,7 @@ def apply_patches(source, dest):
         for filename in fnmatch.filter(filenames, '*.patch'):
             patch_file = os.path.join(root, filename)
             dest_path = os.path.join(dest, os.path.relpath(root, source))
-            patch(base_path=dest_path, patch_file=patch_file)
+            tools.patch(base_path=dest_path, patch_file=patch_file)
 
 
 class AlutConan(ConanFile):
@@ -34,21 +31,17 @@ class AlutConan(ConanFile):
     license = "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
 
     def source(self):
-        #get("https://github.com/vancegroup/freealut/archive/freealut_1_1_0.tar.gz")
-        get("https://github.com/vancegroup/freealut/archive/master.zip")
+        #tools.get("https://github.com/vancegroup/freealut/archive/freealut_1_1_0.tar.gz")
+        tools.get("https://github.com/vancegroup/freealut/archive/master.zip")
         apply_patches('patches', self.folder)
 
     def requirements(self):
         pass
 
     def build(self):
-        cmake = CMake(self.settings)
-        cmake.configure(self, build_dir='_build')
-
-        build_args = ['--']
-        if self.settings.compiler == 'gcc':
-            build_args.append('-j{0}'.format(cpu_count()))
-        cmake.build(self, args=build_args)
+        cmake = CMake(self)
+        cmake.configure(build_dir='_build')
+        cmake.build()
 
     def package(self):
         lib_dir = "_build"
