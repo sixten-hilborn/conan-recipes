@@ -1,7 +1,4 @@
-from conans import ConanFile
-from conans.tools import get, patch, replace_in_file
-from conans import CMake
-from multiprocessing import cpu_count
+from conans import ConanFile, CMake, tools
 import shutil
 
 
@@ -22,22 +19,22 @@ class OdeConan(ConanFile):
     license = "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
 
     def source(self):
-        get("https://bitbucket.org/odedevs/ode/downloads/ode-0.14.tar.gz")
+        tools.get("https://bitbucket.org/odedevs/ode/downloads/ode-0.14.tar.gz")
         shutil.copy('CMakeLists.txt', self.folder)
         shutil.copy('config.h', self.folder + '/ode/src')
 
     def build(self):
-        cmake = CMake(self.settings)
+        cmake = CMake(self)
         options = {
             'BUILD_SHARED_LIBS': self.options.shared,
             'USE_DOUBLE_PRECISION': self.options.double_precision
         }
-        cmake.configure(self, build_dir=self.folder, source_dir='.', defs=options)
+        cmake.configure(build_dir=self.folder, source_dir='.', defs=options)
 
         build_args = ['--']
         if self.settings.compiler == 'gcc':
-            build_args.append('-j{0}'.format(cpu_count()))
-        cmake.build(self, args=build_args)
+            build_args.append('-j{0}'.format(tools.cpu_count()))
+        cmake.build(args=build_args)
 
     def package(self):
         bin_dir = "{0}/bin".format(self.folder)
