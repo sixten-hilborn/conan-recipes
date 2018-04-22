@@ -44,7 +44,9 @@ class AlutConan(ConanFile):
                 'target_link_libraries(alut ${OPENAL_LIBRARY})',
                 'target_link_libraries(alut ${OPENAL_LIBRARY} Winmm)')
         cmake = CMake(self)
+        cmake.definitions['BUILD_EXAMPLES'] = False
         cmake.definitions['BUILD_STATIC'] = not self.options.shared
+        cmake.definitions['BUILD_TESTS'] = False
         cmake.configure(build_dir='_build')
         cmake.build()
 
