@@ -39,10 +39,15 @@ class AlutConan(ConanFile):
         pass
 
     def build(self):
+        syslibs = ''
         if self.settings.os == 'Windows':
-            tools.replace_in_file("{0}/src/CMakeLists.txt".format(self.folder),
-                'target_link_libraries(alut ${OPENAL_LIBRARY})',
-                'target_link_libraries(alut ${OPENAL_LIBRARY} Winmm)')
+            syslibs = 'Winmm'
+        elif self.settings.os == 'Linux':
+            syslibs = 'pthread dl'
+        tools.replace_in_file("{0}/src/CMakeLists.txt".format(self.folder),
+            'target_link_libraries(alut ${OPENAL_LIBRARY})',
+            'target_link_libraries(alut ${OPENAL_LIBRARY} {0})'.format(syslibs))
+
         cmake = CMake(self)
         cmake.definitions['BUILD_EXAMPLES'] = False
         cmake.definitions['BUILD_STATIC'] = not self.options.shared
