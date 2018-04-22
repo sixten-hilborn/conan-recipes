@@ -54,6 +54,6 @@ class AlutConan(ConanFile):
         self.copy("*.dylib", dst="lib", src=bin_dir, keep_path=False)
 
     def package_info(self):
-        self.cpp_info.libs = [
-            'alut'
-        ]
+        self.cpp_info.libs = ['alut']
+        if self.settings.os == 'Linux':
+            self.cpp_info.libs.extend(['dl', 'pthread'])
