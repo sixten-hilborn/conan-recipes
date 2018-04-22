@@ -1,5 +1,4 @@
-from conans import ConanFile
-from conans.tools import get, download, SystemPackageTool
+from conans import ConanFile, tools
 import os
 import shutil
 
@@ -8,14 +7,14 @@ class CgConan(ConanFile):
     description = "NVIDIA Cg Toolkit"
     version = "3.1"
     generators = "cmake"
-    settings = "os", "arch"
+    settings = {"os": ["Linux", "Macos", "Windows"], "arch": ["x86", "x86_64"]}
     url = "http://github.com/sixten-hilborn/conan-cg"
     license = "https://bitbucket.org/cabalistic/ogredeps/src/bfc878e4fd9a3e026de73114cf42abe2787461b8/src/Cg/license.txt"
     exports = ["install_mac.sh"]
 
     def system_requirements(self):
         if self.settings.os == "Linux":
-            installer = SystemPackageTool()
+            installer = tools.SystemPackageTool()
             #installer.install("nvidia-cg-toolkit")
             if self.settings.arch == 'x86':
                 installer.install("libc6:i386")
@@ -37,15 +36,15 @@ class CgConan(ConanFile):
 
     def source_linux(self):
         if self.settings.arch == 'x86':
-            get("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86.tgz")
+            tools.get("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86.tgz")
         elif self.settings.arch == 'x86_64':
-            get("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86_64.tgz")
+            tools.get("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86_64.tgz")
         shutil.rmtree("usr/local")
 
     def source_windows(self):
         def get_cg(path):
             filename = os.path.basename(path)
-            download("https://bitbucket.org/cabalistic/ogredeps/raw/bfc878e4fd9a/src/Cg/{0}".format(path), filename)
+            tools.download("https://bitbucket.org/cabalistic/ogredeps/raw/bfc878e4fd9a/src/Cg/{0}".format(path), filename)
         get_cg('include/Cg/cg.h')
         if self.settings.arch == 'x86':
             get_cg('bin/cg.dll')
@@ -55,7 +54,7 @@ class CgConan(ConanFile):
             get_cg('lib64/cg.lib')
 
     def source_mac(self):
-        download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012.dmg", "Cg.dmg")
+        tools.download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012.dmg", "Cg.dmg")
         self.run("bash -ex ./install_mac.sh")
 
     def package(self):
