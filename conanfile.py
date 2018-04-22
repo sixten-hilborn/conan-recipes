@@ -46,7 +46,7 @@ class AlutConan(ConanFile):
             syslibs = 'pthread dl'
         tools.replace_in_file("{0}/src/CMakeLists.txt".format(self.folder),
             'target_link_libraries(alut ${OPENAL_LIBRARY})',
-            'target_link_libraries(alut ${OPENAL_LIBRARY} {0})'.format(syslibs))
+            'target_link_libraries(alut ${OPENAL_LIBRARY} %s)' % syslibs)
 
         cmake = CMake(self)
         cmake.definitions['BUILD_EXAMPLES'] = False
