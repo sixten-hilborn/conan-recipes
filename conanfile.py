@@ -44,9 +44,12 @@ class AlutConan(ConanFile):
             syslibs = 'Winmm'
         elif self.settings.os == 'Linux':
             syslibs = 'pthread dl'
-        tools.replace_in_file("{0}/src/CMakeLists.txt".format(self.folder),
+        alut_cmakelists = "{0}/src/CMakeLists.txt".format(self.folder)
+        tools.replace_in_file(alut_cmakelists,
             'target_link_libraries(alut ${OPENAL_LIBRARY})',
             'target_link_libraries(alut ${OPENAL_LIBRARY} %s)' % syslibs)
+        # There are some issues with copying files on macos...
+        tools.replace_in_file(alut_cmakelists, 'if(NOT WIN32)', 'if(FALSE)')
 
         cmake = CMake(self)
         cmake.definitions['BUILD_EXAMPLES'] = False
