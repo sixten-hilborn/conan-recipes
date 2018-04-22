@@ -39,7 +39,12 @@ class AlutConan(ConanFile):
         pass
 
     def build(self):
+        if self.settings.os == 'Windows':
+            tools.replace_in_file("{0}/src/CMakeLists.txt".format(self.folder),
+                'target_link_libraries(alut ${OPENAL_LIBRARY})',
+                'target_link_libraries(alut ${OPENAL_LIBRARY} Winmm)')
         cmake = CMake(self)
+        cmake.definitions['BUILD_STATIC'] = not self.options.shared
         cmake.configure(build_dir='_build')
         cmake.build()
 
@@ -49,11 +54,12 @@ class AlutConan(ConanFile):
         self.copy(pattern="*.h", dst="include", src="{0}/include".format(self.folder))
         self.copy("*.lib", dst="lib", src=lib_dir, keep_path=False)
         self.copy("*.a", dst="lib", src=lib_dir, keep_path=False)
-        self.copy("*.so*", dst="lib", src=lib_dir, keep_path=False, links=True)
-        self.copy("*.dll", dst="bin", src=bin_dir, keep_path=False)
-        self.copy("*.dylib", dst="lib", src=bin_dir, keep_path=False)
+        if self.options.shared:
+            self.copy("*.so*", dst="lib", src=lib_dir, keep_path=False, links=True)
+            self.copy("*.dll", dst="bin", src=bin_dir, keep_path=False)
+            self.copy("*.dylib", dst="lib", src=bin_dir, keep_path=False)
 
     def package_info(self):
-        self.cpp_info.libs = ['alut']
+        self.cpp_info.libs = tools.collect_libs(self)
         if self.settings.os == 'Linux':
-            self.cpp_info.libs.extend(['dl', 'pthread'])
+            self.cpp_info.libs.extend(['dl', 'pthread', 'm'])
