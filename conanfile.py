@@ -60,9 +60,9 @@ class CeguiConan(ConanFile):
 
     def requirements(self):
         if self.options.with_ogre:
-            self.requires("OGRE/[>=1.9.0]@sixten-hilborn/stable")
+            self.requires("ogre/[>=1.10.0]@sixten-hilborn/stable")
         if self.options.with_ois:
-            self.requires("OIS/[>=1.3]@sixten-hilborn/stable")
+            self.requires("ois/[>=1.3]@sixten-hilborn/stable")
         if self.options.with_sdl:
             self.requires("sdl2/[>=2.0.5]@bincrafters/stable")
             self.requires("sdl2_image/[>=2.0.1]@sixten-hilborn/stable")
