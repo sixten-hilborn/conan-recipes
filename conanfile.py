@@ -7,7 +7,7 @@ import os
 
 class SdlGpuConan(ConanFile):
     name = "sdl_gpu"
-    version = "20171201"
+    version = "20171229"
     url = "https://github.com/sixten-hilborn/conan-sdl_gpu"
     description = "A library for high-performance, modern 2D graphics with SDL written in C."
     
@@ -67,7 +67,7 @@ class SdlGpuConan(ConanFile):
 
 
     def source(self):
-        commit = 'daffef8128fe1ac24d44814ef0e51e68b97feb1f'
+        commit = '143f767adf7d472f81ce890d4692ed29369aa8f3'
 
         source_url = "https://github.com/grimfang4/sdl-gpu"
         tools.get("{0}/archive/{1}.tar.gz".format(source_url, commit))
