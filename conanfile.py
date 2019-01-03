@@ -32,7 +32,7 @@ class SmpegConan(ConanFile):
     _build_subfolder = "build_subfolder"
 
     requires = (
-        "sdl2/[>=2.0.5]@bincrafters/stable"
+        "sdl2/2.0.9@bincrafters/stable"
     )
 
     def configure(self):
