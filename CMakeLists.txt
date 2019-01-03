@@ -77,6 +77,10 @@ if(CMAKE_COMPILER_IS_GNUCC AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
 	target_compile_options(smpeg2 PRIVATE -Wno-narrowing)
 endif()
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
+    target_compile_options(smpeg2 PRIVATE -Wno-c++11-narrowing)
+endif()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY build)
 
 install(TARGETS smpeg2
