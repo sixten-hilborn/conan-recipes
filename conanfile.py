@@ -9,34 +9,28 @@ import shutil
 class SmpegConan(ConanFile):
     name = "smpeg2"
     version = "2.0.0"
-    url = "https://github.com/sixten-hilborn/conan-smpeg"
     description = "smpeg is an mpeg decoding library, which runs on just about any platform"
-
-    # Indicates License type of the packaged library
-    license = "Library GPL 2.0 - https://www.gnu.org/licenses/old-licenses/lgpl-2.0.html"
-
-    # Packages the license for the conanfile.py
+    topics = ("conan", "smpeg", "smpeg2", "mpeg", "sdl")
+    url = "https://github.com/sixten-hilborn/conan-smpeg"
+    homepage = "https://icculus.org/smpeg"
+    author = "Sixten Hilborn <sixten.hilborn@gmail.com>"
+    license = "LGPL-2.0"
     exports = ["LICENSE.md"]
-
-    # Remove following lines if the target lib does not use cmake.
     exports_sources = ["CMakeLists.txt"]
-    generators = "cmake" 
+    generators = "cmake"
 
-    # Options may need to change depending on the packaged library. 
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
         "fPIC": [True, False]
     }
-    default_options = (
-        'fPIC=True'
-    )
+    default_options = {
+        "fPIC": True
+    }
 
-    # Custom attributes for Bincrafters recipe conventions
-    source_subfolder = "source_subfolder"
-    build_subfolder = "build_subfolder"
-    
-    # Use version ranges for dependencies unless there's a reason not to
+    _source_subfolder = "source_subfolder"
+    _build_subfolder = "build_subfolder"
+
     requires = (
         "sdl2/[>=2.0.5]@bincrafters/stable"
     )
@@ -54,41 +48,36 @@ class SmpegConan(ConanFile):
                 self.options.shared, sdl_shared)
             raise Exception(message)
 
+    def config_options(self):
+        if self.settings.os == 'Windows':
+            del self.options.fPIC
 
     def source(self):
         extracted_dir = self.name + "-" + self.version
         source_url = "https://www.libsdl.org/projects/smpeg/release"
         tools.get("{0}/{1}.tar.gz".format(source_url, extracted_dir))
 
-        #Rename to "source_subfolder" is a convention to simplify later steps
-        os.rename(extracted_dir, self.source_subfolder)
+        # Rename to "source_subfolder" is a convention to simplify later steps
+        os.rename(extracted_dir, self._source_subfolder)
 
-        shutil.move("CMakeLists.txt", "%s/CMakeLists.txt" % self.source_subfolder)
+        shutil.move("CMakeLists.txt", "%s/CMakeLists.txt" % self._source_subfolder)
         # Fix "memset" missing
-        tools.replace_in_file('%s/audio/MPEGaudio.cpp' % self.source_subfolder, '#include "MPEGaudio.h"', '''#include "MPEGaudio.h"
+        tools.replace_in_file('%s/audio/MPEGaudio.cpp' % self._source_subfolder, '#include "MPEGaudio.h"', '''#include "MPEGaudio.h"
 #include <string.h>''')
 
-        
-    def build(self):
+    def _configure_cmake(self):
         cmake = CMake(self)
-        cmake.definitions["CMAKE_POSITION_INDEPENDENT_CODE"] = self.options.fPIC
-        cmake.configure(build_folder=self.build_subfolder, source_folder=self.source_subfolder)
+        cmake.configure(build_folder=self._build_subfolder, source_folder=self._source_subfolder)
+        return cmake
+
+    def build(self):
+        cmake = self._configure_cmake()
         cmake.build()
+
+    def package(self):
+        self.copy(pattern="COPYING", dst="licenses", src=self._source_subfolder)
+        cmake = self._configure_cmake()
         cmake.install()
 
-        
-    def package(self):
-        # If the CMakeLists.txt has a proper install method, the steps below may be redundant
-        # If so, you can replace all the steps below with the word "pass"
-        include_folder = os.path.join(self.source_subfolder, "include")
-        self.copy(pattern="LICENSE")
-        self.copy(pattern="*", dst="include", src=include_folder)
-        self.copy(pattern="*.dll", dst="bin", keep_path=False)
-        self.copy(pattern="*.lib", dst="lib", keep_path=False)
-        self.copy(pattern="*.a", dst="lib", keep_path=False)
-        self.copy(pattern="*.so*", dst="lib", keep_path=False)
-        self.copy(pattern="*.dylib", dst="lib", keep_path=False)
-
-        
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
