@@ -25,11 +25,15 @@ class LuaConan(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
-        "fPIC": [True, False]
+        "fPIC": [True, False],
+        "use_readline": [True, False],  # TODO: Use readline@bincrafters when enabled
+        "use_curses": [True, False]
     }
     default_options = (
         "shared=False",
-        "fPIC=True"
+        "fPIC=True",
+        "use_readline=False",
+        "use_curses=False"
     )
     
     # Custom attributes for Bincrafters recipe conventions
@@ -52,6 +56,8 @@ class LuaConan(ConanFile):
         cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
         cmake.definitions['LUA_BUILD_WLUA'] = False
         cmake.definitions['LUA_BUILD_AS_SHARED'] = self.options.shared
+        cmake.definitions['LUA_USE_READLINE'] = self.options.use_readline
+        cmake.definitions['LUA_USE_CURSES'] = self.options.use_curses
         cmake.definitions['SKIP_INSTALL_DATA'] = True
         cmake.configure(build_folder=self.build_subfolder, source_folder=self.source_subfolder)
         cmake.build()
