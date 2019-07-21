@@ -68,6 +68,7 @@ class SdlGpuConan(ConanFile):
                 installer.install('libgles2-mesa-dev')
             else:
                 installer.install('libgl1-mesa-dev')
+                installer.install('libglu1-mesa-dev')
 
 
     def source(self):
