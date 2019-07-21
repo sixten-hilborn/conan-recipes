@@ -58,7 +58,7 @@ class SdlGpuConan(ConanFile):
             # Does not exist at the moment, but can be overridden
             self.requires("sdl/[>=1.2.15]@conan/stable")
         else:
-            self.requires("sdl2/[>=2.0.5]@bincrafters/stable")
+            self.requires("sdl2/2.0.9@bincrafters/stable")
 
     def system_requirements(self):
         if self.settings.os == "Linux" and tools.os_info.with_apt:
