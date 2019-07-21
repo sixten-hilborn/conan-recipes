@@ -64,6 +64,8 @@ class SdlGpuConan(ConanFile):
         if self.settings.os == "Linux" and tools.os_info.with_apt:
             installer = tools.SystemPackageTool()
             installer.install('mesa-common-dev')
+            if 'arm' in str(self.settings.arch):
+                installer.install('libgles2-mesa-dev')
 
 
     def source(self):
@@ -91,6 +93,7 @@ class SdlGpuConan(ConanFile):
         cmake.definitions['SDL_gpu_BUILD_SHARED'] = self.options.shared
         cmake.definitions['SDL_gpu_BUILD_STATIC'] = not self.options.shared
         cmake.definitions['SDL_gpu_USE_SDL1'] = self.options.use_sdl1
+        cmake.definitions['SDL_gpu_DISABLE_GLES_1'] = True
         cmake.configure(build_folder=self.build_subfolder)
         cmake.build()
         cmake.install()
@@ -103,6 +106,12 @@ class SdlGpuConan(ConanFile):
         self.cpp_info.libs = tools.collect_libs(self)
         if self.settings.os == 'Windows':
             self.cpp_info.libs.append('opengl32')
+        elif self.settings.os == 'Linux':
+            if 'arm' in str(self.settings.arch):
+                self.cpp_info.libs.append('GLESv2')
+            else:
+                self.cpp_info.libs.append('GL')
+
         if self.options.use_sdl1:
             self.cpp_info.includedirs.append("include/SDL")
         else:
