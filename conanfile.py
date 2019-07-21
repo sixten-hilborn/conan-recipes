@@ -113,6 +113,9 @@ class SdlGpuConan(ConanFile):
                 self.cpp_info.libs.append('GLESv2')
             else:
                 self.cpp_info.libs.append('GL')
+        elif self.settings.os == 'Macos':
+            self.cpp_info.exelinkflags.append("-framework OpenGL")
+            self.cpp_info.sharedlinkflags = self.cpp_info.exelinkflags
 
         if self.options.use_sdl1:
             self.cpp_info.includedirs.append("include/SDL")
