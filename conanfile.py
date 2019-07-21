@@ -66,6 +66,8 @@ class SdlGpuConan(ConanFile):
             installer.install('mesa-common-dev')
             if 'arm' in str(self.settings.arch):
                 installer.install('libgles2-mesa-dev')
+            else:
+                installer.install('libgl1-mesa-dev')
 
 
     def source(self):
