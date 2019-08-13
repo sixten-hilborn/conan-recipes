@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from conans import ConanFile, CMake, tools
+from conans.model.version import Version
 import os
 import fnmatch
 
@@ -88,6 +89,10 @@ class CeguiConan(ConanFile):
     def build(self):
         if not self.options.with_ois:
             tools.replace_in_file('{0}/CMakeLists.txt'.format(self.source_subfolder), 'find_package(OIS)', '')
+
+        # Remove VS snprintf workaround
+        if self.settings.compiler == 'Visual Studio' and int(str(self.settings.compiler.version)) >= 14:
+            tools.replace_in_file('{0}/cegui/include/CEGUI/PropertyHelper.h'.format(self.source_subfolder), '#define snprintf _snprintf', '')
 
         cmake = CMake(self)
         cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
