@@ -53,7 +53,9 @@ class CeguiConan(ConanFile):
     # Use version ranges for dependencies unless there's a reason not to
     requires = (
         "freetype/[>=2.8.1]@bincrafters/stable",
-        "libxml2/[>=2.9.3]@bincrafters/stable"
+        "libxml2/[>=2.9.3]@bincrafters/stable",
+        "zlib/1.2.11",  # override zlib from freetype
+        "libpng/1.6.37",  # override libpng from freetype
     )
 
     short_paths = True
@@ -107,6 +109,11 @@ class CeguiConan(ConanFile):
         cmake.definitions['CEGUI_BUILD_RENDERER_OPENGL'] = self.options.with_opengl
         cmake.definitions['CEGUI_BUILD_RENDERER_OPENGL3'] = self.options.with_opengl3
         cmake.definitions['CEGUI_BUILD_RENDERER_OPENGLES'] = self.options.with_opengles
+        # Help CMake find the libxml2 library file
+        if self.deps_cpp_info["libxml2"].libs[0].endswith('_a'):
+            fileext = '.lib' if self.settings.os == 'Windows' else '.a'
+            cmake.definitions['LIBXML2_LIBRARY'] = os.path.join(self.deps_cpp_info["libxml2"].lib_paths[0], self.deps_cpp_info["libxml2"].libs[0]+fileext)
+
         cmake.configure(build_folder=self.build_subfolder)
         cmake.build()
 
