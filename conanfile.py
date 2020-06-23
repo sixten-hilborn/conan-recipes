@@ -52,10 +52,9 @@ class CeguiConan(ConanFile):
     
     # Use version ranges for dependencies unless there's a reason not to
     requires = (
-        "freetype/[>=2.8.1]@bincrafters/stable",
-        "libxml2/[>=2.9.3]@bincrafters/stable",
-        "zlib/1.2.11",  # override zlib from freetype
-        "libpng/1.6.37",  # override libpng from freetype
+        "freetype/2.10.1",
+        "libxml2/2.9.10",
+        "libiconv/1.16",  # override to avoid collision between freetype and sdl2
     )
 
     short_paths = True
@@ -63,18 +62,18 @@ class CeguiConan(ConanFile):
 
     def requirements(self):
         if self.options.with_ogre:
-            self.requires("ogre/[>=1.10.0]@sixten-hilborn/stable")
+            self.requires("ogre/[>=1.12.0]@sixten-hilborn/stable")
         if self.options.with_ois:
             self.requires("ois/[>=1.3]@sixten-hilborn/stable")
         if self.options.with_sdl:
-            self.requires("sdl2/[>=2.0.5]@bincrafters/stable")
-            self.requires("sdl2_image/[>=2.0.1]@sixten-hilborn/stable")
+            self.requires("sdl2/2.0.12@bincrafters/stable")
+            self.requires("sdl2_image/2.0.5@bincrafters/stable")
         else:
-            self.requires("freeimage/[>=3.17.0]@sixten-hilborn/stable")
+            self.requires("freeimage/3.18.0@sixten-hilborn/stable")
         if self.options.with_opengl or self.options.with_opengl3 or self.options.with_opengles:
-            self.requires("glew/[>=2.1.0]@bincrafters/stable")
-            self.requires("glm/0.9.8.5@g-truc/stable")
-            self.requires("glfw/[>=3.2.1]@bincrafters/stable")
+            self.requires("glew/2.1.0@bincrafters/stable")
+            self.requires("glm/0.9.9.8")
+            self.requires("glfw/3.3.2")
 
 
     def source(self):
