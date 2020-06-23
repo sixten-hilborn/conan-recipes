@@ -9,7 +9,7 @@ import fnmatch
 
 class CeguiConan(ConanFile):
     name = "cegui"
-    version = "0.8.7"
+    version = "0.8.x-20200518"
     url = "http://github.com/sixten-hilborn/conan-cegui"
     description = "Crazy Eddie's GUI"
     
@@ -78,9 +78,9 @@ class CeguiConan(ConanFile):
 
 
     def source(self):
-        extracted_dir = self.name + "-" + self.version
-        source_url = "https://bitbucket.org/cegui/cegui"
-        tools.get("{0}/downloads/{1}.zip".format(source_url, extracted_dir))
+        commit_id = 'c288602aa95affdab831468ba0a2b34fa1751a6a'
+        extracted_dir = self.name + "-" + commit_id
+        tools.get("https://github.com/cegui/cegui/archive/{0}.zip".format(commit_id))
 
         #Rename to "source_subfolder" is a convention to simplify later steps
         os.rename(extracted_dir, self.source_subfolder)
@@ -112,7 +112,10 @@ class CeguiConan(ConanFile):
         # Help CMake find the libxml2 library file
         if self.deps_cpp_info["libxml2"].libs[0].endswith('_a'):
             fileext = '.lib' if self.settings.os == 'Windows' else '.a'
-            cmake.definitions['LIBXML2_LIBRARY'] = os.path.join(self.deps_cpp_info["libxml2"].lib_paths[0], self.deps_cpp_info["libxml2"].libs[0]+fileext)
+            cmake.definitions['LIBXML2_LIBRARIES'] = os.path.join(self.deps_cpp_info["libxml2"].lib_paths[0], self.deps_cpp_info["libxml2"].libs[0]+fileext)
+        # Help CMake find OGRE
+        if self.options.with_ogre:
+            cmake.definitions['OGRE_HOME'] = self.deps_cpp_info["ogre"].rootpath
 
         cmake.configure(build_folder=self.build_subfolder)
         cmake.build()
