@@ -33,19 +33,21 @@ class CeguiConan(ConanFile):
         "with_opengl": [True, False],
         "with_opengl3": [True, False],
         "with_opengles": [True, False],
-        "with_sdl": [True, False]
+        "with_sdl": [True, False],
+        "build_static_factory_module": [True, False],
     }
-    default_options = (
-        "shared=True",
-        "fPIC=True",
-        "with_ogre=False",
-        "with_ois=False",
-        "with_opengl=False",
-        "with_opengl3=False",
-        "with_opengles=False",
-        "with_sdl=False",
-    )
-    
+    default_options = {
+        "shared": True,
+        "fPIC": True,
+        "with_ogre": False,
+        "with_ois": False,
+        "with_opengl": False,
+        "with_opengl3": False,
+        "with_opengles": False,
+        "with_sdl": False,
+        "build_static_factory_module": True,
+    }
+
     # Custom attributes for Bincrafters recipe conventions
     source_subfolder = "source_subfolder"
     build_subfolder = "build_subfolder"
@@ -59,6 +61,9 @@ class CeguiConan(ConanFile):
 
     short_paths = True
 
+    def configure(self):
+        if self.options.shared:
+            self.options.remove("build_static_factory_module")
 
     def requirements(self):
         if self.options.with_ogre:
@@ -95,6 +100,11 @@ class CeguiConan(ConanFile):
         if self.settings.compiler == 'Visual Studio' and int(str(self.settings.compiler.version)) >= 14:
             tools.replace_in_file('{0}/cegui/include/CEGUI/PropertyHelper.h'.format(self.source_subfolder), '#define snprintf _snprintf', '')
 
+        # Fix static build issue in Libxml2 module
+        tools.replace_in_file('{0}/cegui/include/CEGUI/XMLParserModules/Libxml2/XMLParser.h'.format(self.source_subfolder),
+            '#if defined( __WIN32__ ) || defined( _WIN32 )',
+            '#if (defined( __WIN32__ ) || defined( _WIN32 )) && !defined(CEGUI_STATIC)')
+
         cmake = CMake(self)
         cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
         cmake.definitions['CEGUI_SAMPLES_ENABLED'] = False
@@ -108,6 +118,9 @@ class CeguiConan(ConanFile):
         cmake.definitions['CEGUI_BUILD_RENDERER_OPENGL'] = self.options.with_opengl
         cmake.definitions['CEGUI_BUILD_RENDERER_OPENGL3'] = self.options.with_opengl3
         cmake.definitions['CEGUI_BUILD_RENDERER_OPENGLES'] = self.options.with_opengles
+        if not self.options.shared:
+            cmake.definitions['CEGUI_BUILD_STATIC_CONFIGURATION'] = True
+            cmake.definitions['CEGUI_BUILD_STATIC_FACTORY_MODULE'] = self.options.build_static_factory_module
         # Help CMake find the libxml2 library file
         if self.deps_cpp_info["libxml2"].libs[0].endswith('_a'):
             fileext = '.lib' if self.settings.os == 'Windows' else '.a'
@@ -126,15 +139,22 @@ class CeguiConan(ConanFile):
         self.copy(pattern="LICENSE")
         self.copy(pattern="*", dst="include/CEGUI", src="{0}/cegui/include/CEGUI".format(self.source_subfolder))
         self.copy(pattern="*", dst="include/CEGUI", src="{0}/{1}/cegui/include/CEGUI".format(self.build_subfolder, self.source_subfolder))
-        self.copy(pattern="*.dll", dst="bin", src=self.build_subfolder, keep_path=False)
-        self.copy(pattern="*.lib", dst="lib", src=self.build_subfolder, keep_path=False)
-        self.copy(pattern="*.a", dst="lib", src=self.build_subfolder, keep_path=False)
-        self.copy(pattern="*.so*", dst="lib", src=self.build_subfolder, keep_path=False)
-        self.copy(pattern="*.dylib", dst="lib", src=self.build_subfolder, keep_path=False)
+        if self.options.shared:
+            self.copy(pattern="*.dll", dst="bin", src=self.build_subfolder, keep_path=False)
+            self.copy(pattern="*.lib", dst="lib", src=self.build_subfolder, keep_path=False)
+            self.copy(pattern="*.so*", dst="lib", src=self.build_subfolder, keep_path=False)
+            self.copy(pattern="*.dylib", dst="lib", src=self.build_subfolder, keep_path=False)
+        else:
+            self.copy(pattern="*.a", dst="lib", src=self.build_subfolder, keep_path=False)
+            self.copy(pattern="*_Static.lib", dst="lib", src=self.build_subfolder, keep_path=False)
 
-        
+
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
+        if not self.options.shared:
+            self.cpp_info.defines.append('CEGUI_STATIC')
+            if self.settings.os == 'Windows':
+                self.cpp_info.libs.append('Winmm')
 
 
     @staticmethod
