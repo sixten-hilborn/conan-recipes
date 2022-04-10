@@ -7,7 +7,7 @@ import shutil
 
 
 class SmpegConan(ConanFile):
-    name = "smpeg2"
+    name = "smpeg"
     version = "2.0.0"
     description = "smpeg is an mpeg decoding library, which runs on just about any platform"
     topics = ("conan", "smpeg", "smpeg2", "mpeg", "sdl")
@@ -25,35 +25,23 @@ class SmpegConan(ConanFile):
         "fPIC": [True, False]
     }
     default_options = {
-        "fPIC": True
+        "shared": False,
+        "fPIC": True,
     }
 
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
     requires = (
-        "sdl2/2.0.9@bincrafters/stable"
+        "sdl/2.0.16"
     )
-
-    def configure(self):
-        sdl_shared = self.options['sdl2'].shared
-        if sdl_shared is None:
-            sdl_shared = False
-
-        if self.options.shared.value is None:
-            self.options.shared = sdl_shared
-
-        if self.options.shared != sdl_shared:
-            message = 'smpeg:shared ({0}) must be the same as sdl2:shared ({1})'.format(
-                self.options.shared, sdl_shared)
-            raise Exception(message)
 
     def config_options(self):
         if self.settings.os == 'Windows':
             del self.options.fPIC
 
     def source(self):
-        extracted_dir = self.name + "-" + self.version
+        extracted_dir = "smpeg2-" + self.version
         source_url = "https://www.libsdl.org/projects/smpeg/release"
         tools.get("{0}/{1}.tar.gz".format(source_url, extracted_dir))
 

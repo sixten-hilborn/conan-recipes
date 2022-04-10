@@ -26,39 +26,24 @@ class SdlGpuConan(ConanFile):
     options = {
         "shared": [True, False],
         "fPIC": [True, False],
-        "use_sdl1": [True, False],
     }
-    default_options = (
-        'fPIC=True',
-        'use_sdl1=False'
-    )
+    default_options = {
+        "shared": False,
+        "fPIC": True,
+    }
     
     # Custom attributes for Bincrafters recipe conventions
     source_subfolder = "source_subfolder"
     build_subfolder = "build_subfolder"
     
     def configure(self):
+        if self.options.shared:
+            del self.options.fPIC
         del self.settings.compiler.libcxx
-
-        sdl = 'sdl' if self.options.use_sdl1 else 'sdl2'
-        sdl_shared = self.options[sdl].shared
-        if sdl_shared is None:
-            sdl_shared = False
-
-        if self.options.shared.value is None:
-            self.options.shared = sdl_shared
-
-        if self.options.shared != sdl_shared:
-            message = 'sdl_gpu:shared ({0}) must be the same as {1}:shared ({2})'.format(
-                self.options.shared, sdl, sdl_shared)
-            raise Exception(message)
+        del self.settings.compiler.cppstd
 
     def requirements(self):
-        if self.options.use_sdl1:
-            # Does not exist at the moment, but can be overridden
-            self.requires("sdl/[>=1.2.15]@conan/stable")
-        else:
-            self.requires("sdl2/2.0.9@bincrafters/stable")
+        self.requires("sdl/2.0.16")
 
     def system_requirements(self):
         if self.settings.os == "Linux" and tools.os_info.with_apt:
@@ -95,7 +80,7 @@ class SdlGpuConan(ConanFile):
         cmake.definitions['SDL_gpu_BUILD_DEMOS'] = False
         cmake.definitions['SDL_gpu_BUILD_SHARED'] = self.options.shared
         cmake.definitions['SDL_gpu_BUILD_STATIC'] = not self.options.shared
-        cmake.definitions['SDL_gpu_USE_SDL1'] = self.options.use_sdl1
+        cmake.definitions['SDL_gpu_USE_SDL1'] = self._use_sdl1
         cmake.definitions['SDL_gpu_DISABLE_GLES_1'] = True
         cmake.configure(build_folder=self.build_subfolder)
         cmake.build()
@@ -118,7 +103,12 @@ class SdlGpuConan(ConanFile):
             self.cpp_info.exelinkflags.append("-framework OpenGL")
             self.cpp_info.sharedlinkflags = self.cpp_info.exelinkflags
 
-        if self.options.use_sdl1:
+        if self._use_sdl1:
             self.cpp_info.includedirs.append("include/SDL")
         else:
             self.cpp_info.includedirs.append("include/SDL2")
+
+    @property
+    def _use_sdl1(self):
+        vers = self.deps_cpp_info['sdl'].version
+        return vers < "2.0.0"

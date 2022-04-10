@@ -71,7 +71,7 @@ if(WIN32)
 	endif()
 endif()
 
-target_link_libraries(smpeg2 PUBLIC CONAN_PKG::sdl2)
+target_link_libraries(smpeg2 PUBLIC CONAN_PKG::sdl)
 
 if(CMAKE_COMPILER_IS_GNUCC AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
 	target_compile_options(smpeg2 PRIVATE -Wno-narrowing)

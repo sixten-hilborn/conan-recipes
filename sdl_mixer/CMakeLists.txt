@@ -164,7 +164,7 @@ add_library(SDL2_mixer
 	${SDLMIXER_ADDITIONAL_SRC}
 )
 	
-target_link_libraries(SDL2_mixer CONAN_PKG::sdl2 ${SDLMIXER_LIBRARIES})
+target_link_libraries(SDL2_mixer CONAN_PKG::sdl ${SDLMIXER_LIBRARIES})
 
 install(TARGETS SDL2_mixer
 	RUNTIME DESTINATION bin

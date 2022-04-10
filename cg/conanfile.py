@@ -3,7 +3,7 @@ import os
 import shutil
 
 class CgConan(ConanFile):
-    name = "Cg"
+    name = "cg"
     description = "NVIDIA Cg Toolkit"
     version = "3.1"
     generators = "cmake"
@@ -42,16 +42,16 @@ class CgConan(ConanFile):
         shutil.rmtree("usr/local")
 
     def source_windows(self):
-        def get_cg(path):
+        def get_cg(path, sha256):
             filename = os.path.basename(path)
-            tools.download("https://bitbucket.org/cabalistic/ogredeps/raw/bfc878e4fd9a/src/Cg/{0}".format(path), filename)
-        get_cg('include/Cg/cg.h')
+            tools.download("https://raw.githubusercontent.com/AnotherFoxGuy/cg-toolkit/master/{0}".format(path), filename, sha256=sha256)
+        get_cg('include/Cg/cg.h', 'fdcfeba9b8507437baad347d75c8c2b2599a845b515861bcc535d7af9941c6ed')
         if self.settings.arch == 'x86':
-            get_cg('bin/cg.dll')
-            get_cg('lib/cg.lib')
+            get_cg('bin/cg.dll', 'd7c5eadbcad39cbb2e6a3ec839d747bf85f3470cf07c9e5c9873546bd6197b2e')
+            get_cg('lib/cg.lib', 'cdaa948eb336fe52194eb15b014bd26683ab05316060766bca0d57f9c22b1fa2')
         else:
-            get_cg('bin64/cg.dll')
-            get_cg('lib64/cg.lib')
+            get_cg('bin64/cg.dll', '124c758001dd52bd6ef04db670fe93b2107c7d4c9930eed805b766f30418e8fd')
+            get_cg('lib64/cg.lib', '719e4d54ce5cfdb4173254439ced1427b42793bf697c82a888c67e8bb5ebcbb5')
 
     def source_mac(self):
         tools.download("http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012.dmg", "Cg.dmg")

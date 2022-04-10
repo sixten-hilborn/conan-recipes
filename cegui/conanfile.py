@@ -67,16 +67,17 @@ class CeguiConan(ConanFile):
 
     def requirements(self):
         if self.options.with_ogre:
-            self.requires("ogre/[>=1.12.0]@sixten-hilborn/stable")
+            self.requires("ogre/1.11.6@sixten-hilborn/stable")
         if self.options.with_ois:
-            self.requires("ois/[>=1.3]@sixten-hilborn/stable")
+            self.requires("ois/1.5")
         if self.options.with_sdl:
-            self.requires("sdl2/2.0.12@bincrafters/stable")
-            self.requires("sdl2_image/2.0.5@bincrafters/stable")
+            self.requires("sdl/2.0.16")
+            self.requires("sdl_image/2.0.5")
         else:
-            self.requires("freeimage/3.18.0@sixten-hilborn/stable")
+            self.requires("freeimage/3.18.0")
+            self.requires("zlib/1.2.11", override=True)
         if self.options.with_opengl or self.options.with_opengl3 or self.options.with_opengles:
-            self.requires("glew/2.1.0@bincrafters/stable")
+            self.requires("glew/2.2.0")
             self.requires("glm/0.9.9.8")
             self.requires("glfw/3.3.2")
 

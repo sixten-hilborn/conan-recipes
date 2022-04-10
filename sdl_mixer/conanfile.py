@@ -35,24 +35,23 @@ class Sdl2MixerConan(ConanFile):
         "with_libmodplug": [True, False],
         "with_libmad": [True, False]
     }
-    default_options = (
-        'shared=False',
-        'fPIC=True',
-        'with_smpeg=False',
-        'with_mpg123=True',
-        'with_flac=True',
-        'with_ogg=True',
-        'with_libmikmod=True',
-        'with_libmodplug=False',
-        'with_libmad=False'
-    )
+    default_options = {
+        "shared": False,
+        "fPIC": True,
+        "with_smpeg": False,
+        "with_mpg123": True,
+        "with_flac": True,
+        "with_ogg": True,
+        "with_libmikmod": True,
+        "with_libmodplug": False,
+        "with_libmad": False,
+    }
 
     # Custom attributes for Bincrafters recipe conventions
     source_subfolder = "source_subfolder"
     build_subfolder = "build_subfolder"
 
-    # Use version ranges for dependencies unless there's a reason not to
-    requires = "sdl2/[>=2.0.6]@bincrafters/stable"
+    requires = "sdl/2.0.16"
 
 
     def config(self):
@@ -61,20 +60,20 @@ class Sdl2MixerConan(ConanFile):
 
     def requirements(self):
         if self.options.with_smpeg:
-            self.requires("smpeg2/[>=2.0.0]@sixten-hilborn/stable")
+            self.requires("smpeg/2.0.0@sixten-hilborn/stable")
         if self.options.with_mpg123:
-            self.requires("mpg123/1.25.6@sixten-hilborn/stable")
+            self.requires("mpg123/1.26.4")
         if self.options.with_flac:
-            self.requires("flac/[>=1.3.2]@bincrafters/stable")
+            self.requires("flac/1.3.3")
         if self.options.with_ogg:
-            self.requires("ogg/[>=1.3.3]@bincrafters/stable")
-            self.requires("vorbis/[>=1.3.5]@bincrafters/stable")
+            self.requires("ogg/1.3.5")
+            self.requires("vorbis/1.3.7")
         if self.options.with_libmikmod:
-            self.requires("libmikmod/[>=3.3.11.1]@sixten-hilborn/stable")
+            self.requires("libmikmod/3.3.11.1")
         if self.options.with_libmodplug:
-            self.requires("libmodplug/[>=0.8.8.5]@sixten-hilborn/stable")
+            self.requires("libmodplug/0.8.9.0")
         if self.options.with_libmad:
-            self.requires("libmad/[>=0.15.1]@hilborn/stable")
+            self.requires("libmad/0.15.1b")
 
 
     def source(self):

@@ -77,7 +77,7 @@ class OgreConan(ConanFile):
     }
     exports_sources = ['patches*']
     requires = (
-        "freeimage/3.18.0@sixten-hilborn/stable",
+        "freeimage/3.18.0",
         "zlib/1.2.11"
     )
     url = "http://github.com/sixten-hilborn/conan-ogre"
@@ -102,7 +102,7 @@ class OgreConan(ConanFile):
 
     def requirements(self):
         if self.options.with_plugin_cg:
-            self.requires("Cg/3.1@sixten-hilborn/stable")
+            self.requires("cg/3.1@sixten-hilborn/stable")
         if self.options.with_component_overlay:
             self.requires("freetype/2.10.1")
             self.requires("libpng/1.6.37")  # override freetype's libpng
