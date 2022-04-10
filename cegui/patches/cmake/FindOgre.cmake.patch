@@ -1,0 +1,11 @@
+--- FindOgre.cmake
++++ FindOgre.cmake
+@@ -249,7 +249,7 @@ if (OGRE_FOUND)
+         endif ()
+     endif()
+ 
+-    file (STRINGS "${OGRE_H_PATH}/OgrePrerequisites.h" _CEGUIOGREVERSIONDEFINES REGEX ".*#define OGRE_VERSION_.*[0-9]+")
++    file (STRINGS "${OGRE_H_PATH}/OgreBuildSettings.h" _CEGUIOGREVERSIONDEFINES REGEX ".*#define OGRE_VERSION_.*[0-9]+")
+ 
+     foreach (ver MAJOR MINOR PATCH)
+         set (CEGUI_FOUND_OGRE_VERSION_${ver} 0)

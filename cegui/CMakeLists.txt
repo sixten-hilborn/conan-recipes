@@ -1,0 +1,6 @@
+PROJECT(conancegui)
+cmake_minimum_required(VERSION 2.8)
+include(conanbuildinfo.cmake)
+CONAN_BASIC_SETUP()
+set(CMAKE_CXX_STANDARD 11)
+add_subdirectory("./source_subfolder")
