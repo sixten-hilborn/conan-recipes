@@ -5,13 +5,14 @@ from glob import glob
 
 def main():
     args = parse_args()
-    dirs = glob("./*/")
+    root_dir = os.path.dirname(os.path.realpath(__file__))
+    dirs = glob(f"{root_dir}/*/")
 
     packages = []
 
     #conan_profile = os.getenv('CONAN_PROFILE')
     if args.dry_run:
-        os.environ["CONAN_USER_HOME"] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "conanhome")
+        os.environ["CONAN_USER_HOME"] = os.path.join(root_dir, "conanhome")
 
     for p in dirs:
         path = f'{p}/conanfile.py'
