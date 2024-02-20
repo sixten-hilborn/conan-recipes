@@ -1,6 +1,37 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import os
+import argparse
 from glob import glob
+
+def main():
+    args = parse_args()
+    dirs = glob("./*/")
+
+    packages = []
+
+    #conan_profile = os.getenv('CONAN_PROFILE')
+    if args.dry_run:
+        os.environ["CONAN_USER_HOME"] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "conanhome")
+
+    for p in dirs:
+        path = f'{p}/conanfile.py'
+        if not os.path.isfile(path):
+            continue
+        packages.append(f"{p} sixten-hilborn/stable")
+
+    for pkg in packages:
+        system(f"conan export {pkg}")
+
+    if args.build:
+        for pkg in packages:
+            system(f"conan create {pkg} -k -b=outdated")
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('-n', '--dry-run', action='store_true')
+    parser.add_argument('-b', '--build', action='store_true')
+    return parser.parse_args()
 
 
 def system(command):
@@ -9,20 +40,5 @@ def system(command):
         raise Exception("Error while executing:\n\t %s" % command)
 
 
-dirs = glob("./*/")
-
-packages = []
-
-conan_profile = os.getenv('CONAN_PROFILE')
-
-for p in dirs:
-    path = f'{p}/conanfile.py'
-    if not os.path.isfile(path):
-        continue
-    packages.append(f"{p} sixten-hilborn/stable")
-
-for pkg in packages:
-    system(f"conan export {pkg}")
-
-for pkg in packages:
-    system(f"conan create {pkg} -k -b=outdated")
+if __name__ == '__main__':
+    main()
