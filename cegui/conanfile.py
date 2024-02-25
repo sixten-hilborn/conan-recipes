@@ -21,7 +21,7 @@ class CeguiConan(ConanFile):
     
     # Remove following lines if the target lib does not use cmake.
     exports_sources = ["CMakeLists.txt", "patches*"]
-    generators = "cmake" 
+    generators = "cmake", "cmake_find_package"
     
     # Options may need to change depending on the packaged library. 
     settings = "os", "arch", "compiler", "build_type"
@@ -54,9 +54,8 @@ class CeguiConan(ConanFile):
     
     # Use version ranges for dependencies unless there's a reason not to
     requires = (
-        "freetype/2.10.1",
+        "freetype/2.11.1",
         "libxml2/2.9.10",
-        "libiconv/1.16",  # override to avoid collision between freetype and sdl2
     )
 
     short_paths = True
@@ -96,6 +95,19 @@ class CeguiConan(ConanFile):
     def build(self):
         if not self.options.with_ois:
             tools.replace_in_file('{0}/CMakeLists.txt'.format(self.source_subfolder), 'find_package(OIS)', '')
+
+        tools.replace_in_file('{0}/CMakeLists.txt'.format(self.source_subfolder), 'if(${OGRE_FOUND})', '''if(${OGRE_FOUND})
+        if(NOT DEFINED CEGUI_FOUND_OGRE_VERSION_MAJOR)
+            string(REPLACE "." ";" OGRE_VERSION_LIST ${OGRE_VERSION})
+            list(GET OGRE_VERSION_LIST 0 CEGUI_FOUND_OGRE_VERSION_MAJOR)
+            list(GET OGRE_VERSION_LIST 1 CEGUI_FOUND_OGRE_VERSION_MINOR)
+            list(GET OGRE_VERSION_LIST 2 CEGUI_FOUND_OGRE_VERSION_PATCH)
+        endif()''')
+
+        tools.replace_in_file('{0}/CMakeLists.txt'.format(self.source_subfolder), 'if(NOT ${OGRE_FOUND})', '''if(NOT ${OGRE_FOUND})
+            find_package(OGRE)
+        endif()
+        if(NOT ${OGRE_FOUND})''')
 
         # Remove VS snprintf workaround
         if self.settings.compiler == 'Visual Studio' and int(str(self.settings.compiler.version)) >= 14:
