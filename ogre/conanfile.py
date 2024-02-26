@@ -104,8 +104,7 @@ class OgreConan(ConanFile):
         if self.options.with_plugin_cg:
             self.requires("cg/3.1@sixten-hilborn/stable")
         if self.options.with_component_overlay:
-            self.requires("freetype/2.10.1")
-            self.requires("libpng/1.6.37")  # override freetype's libpng
+            self.requires("freetype/2.11.1")
         if self.options.with_component_bites and not self.options.with_component_overlay:
             raise ConanInvalidConfiguration("with_component_bites requires with_component_overlay")
         if not self.options.shared:
@@ -220,6 +219,10 @@ class OgreConan(ConanFile):
             self.copy("*.res", dst="res", src='_build/Components/Bites', keep_path=False)
 
     def package_info(self):
+        self.cpp_info.set_property("cmake_file_name", "OGRE")
+        self.cpp_info.names["cmake_find_package"] = "OGRE"
+        self.cpp_info.names["cmake_find_package_multi"] = "OGRE"
+
         # Unfortunately some headers assumes the OGRE directory is an include path
         self.cpp_info.includedirs.append('include/OGRE')
 
