@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 import os
+import sys
 import argparse
+import yaml
 from glob import glob
+import subprocess
+
+REFERENCE = "sixten-hilborn/stable"
+
 
 def main():
     args = parse_args()
@@ -15,17 +21,17 @@ def main():
         os.environ["CONAN_USER_HOME"] = os.path.join(root_dir, "conanhome")
 
     for p in dirs:
-        path = f'{p}/conanfile.py'
-        if not os.path.isfile(path):
-            continue
-        packages.append(f"{p} sixten-hilborn/stable")
+        if os.path.isfile(f'{p}/config.yml'):
+            packages.extend(load_config(p))
+        elif os.path.isfile(f'{p}/conanfile.py'):
+            packages.append((p, REFERENCE))
 
-    for pkg in packages:
-        system(f"conan export {pkg}")
+    for path, ref in packages:
+        run_command(["conan", "export", path, ref])
 
     if args.build:
-        for pkg in packages:
-            system(f"conan create {pkg} -k -b=outdated")
+        for path, ref in packages:
+            run_command(["conan", "create", path, ref, "-k", "-b=outdated"])
 
 
 def parse_args():
@@ -35,10 +41,24 @@ def parse_args():
     return parser.parse_args()
 
 
-def system(command):
-    retcode = os.system(command)
-    if retcode != 0:
-        raise Exception("Error while executing:\n\t %s" % command)
+def load_config(path):
+    with open(f'{path}/config.yml') as conf_file:
+        config = yaml.load(conf_file, Loader=yaml.CLoader)
+    packages = []
+    versions = config['versions']
+    for version, conf in versions.items():
+        folder = conf['folder']
+        packages.append((f"{path}/{folder}", f"{version}@{REFERENCE}"))
+    return packages
+
+
+def run_command(args):
+    try:
+        subprocess.run(args)
+    except:
+        command = ' '.join(args)
+        print(f"Error while executing: '{command}'", file=sys.stderr)
+        raise
 
 
 if __name__ == '__main__':
