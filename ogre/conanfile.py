@@ -158,6 +158,10 @@ class OgreConan(ConanFile):
             '{0}/PlugIns/FreeImageCodec/CMakeLists.txt'.format(self.folder),
             '${FreeImage_LIBRARIES}',
             'CONAN_PKG::freeimage')
+        tools.replace_in_file(
+            '{0}/Samples/CMakeLists.txt'.format(self.folder),
+            'if (MSVC)',
+            'if (MSVC AND OGRE_BUILD_SAMPLES)')
 
         # Fix for static build without DirectX 9
         if not self.options.with_rendersystem_d3d9:

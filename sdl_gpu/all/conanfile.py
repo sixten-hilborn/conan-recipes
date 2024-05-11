@@ -70,6 +70,11 @@ class SdlGpuConan(ConanFile):
             "find_library(SDL2_LIBRARY NAMES SDL2 sdl2 sdl2 sdl-2.0",
             "find_library(SDL2_LIBRARY NAMES SDL2 sdl2 sdl2 sdl-2.0 SDL2d",
         )
+        tools.replace_in_file(
+            "{}/CMakeLists.txt".format(self.source_subfolder),
+            "find_package(Doxygen)",
+            "set(DOXYGEN_FOUND FALSE) #find_package(Doxygen)",
+        )
 
         cmake = CMake(self)
         cmake.definitions["CMAKE_POSITION_INDEPENDENT_CODE"] = self.options.fPIC
