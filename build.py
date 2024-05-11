@@ -19,6 +19,7 @@ def main():
     #conan_profile = os.getenv('CONAN_PROFILE')
     if args.dry_run:
         os.environ["CONAN_USER_HOME"] = os.path.join(root_dir, "conanhome")
+        os.environ["CONAN_USER_HOME_SHORT"] = os.path.join(root_dir, "conanhome")
 
     for p in dirs:
         if os.path.isfile(f'{p}/config.yml'):
