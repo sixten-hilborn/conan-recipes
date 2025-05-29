@@ -1,8 +1,0 @@
-PROJECT(conanalut)
-cmake_minimum_required(VERSION 2.8)
-include(conanbuildinfo.cmake)
-CONAN_BASIC_SETUP()
-#include_directories(${CMAKE_SOURCE_DIR}/freealut-freealut_1_1_0)
-#add_subdirectory("./freealut-freealut_1_1_0")
-include_directories(${CMAKE_SOURCE_DIR}/freealut-master)
-add_subdirectory("./freealut-master")

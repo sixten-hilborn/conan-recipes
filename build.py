@@ -6,7 +6,8 @@ import yaml
 from glob import glob
 import subprocess
 
-REFERENCE = "sixten-hilborn/stable"
+USER = "sixten-hilborn"
+CHANNEL = "stable"
 
 
 def main():
@@ -25,20 +26,31 @@ def main():
         if os.path.isfile(f'{p}/config.yml'):
             packages.extend(load_config(p))
         elif os.path.isfile(f'{p}/conanfile.py'):
-            packages.append((p, REFERENCE))
+            packages.append((p, None))
 
-    for path, ref in packages:
-        run_command(["conan", "export", path, ref])
+    if not args.no_export:
+        for path, version in packages:
+            command = ["conan", "export", "--user", USER, "--channel", CHANNEL]
+            if version is not None:
+                command.extend(["--version", version])
+            command.append(path)
+            run_command(args, command)
 
     if args.build:
-        for path, ref in packages:
-            run_command(["conan", "create", path, ref, "-k", "-b=outdated"])
+        for path, version in packages:
+            command = ["conan", "create", "-b=missing", "--user", USER, "--channel", CHANNEL]
+            if version is not None:
+                command.extend(["--version", version])
+            command.append(path)
+            run_command(args, command)
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('-n', '--dry-run', action='store_true')
     parser.add_argument('-b', '--build', action='store_true')
+    parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('--no-export', action='store_true')
     return parser.parse_args()
 
 
@@ -49,16 +61,18 @@ def load_config(path):
     versions = config['versions']
     for version, conf in versions.items():
         folder = conf['folder']
-        packages.append((f"{path}/{folder}", f"{version}@{REFERENCE}"))
+        packages.append((f"{path}/{folder}", f"{version}"))
     return packages
 
 
-def run_command(args):
+def run_command(args, command):
+    command_str = ' '.join(command)
     try:
-        subprocess.run(args)
+        if args.verbose:
+            print(f"Running: '{command_str}'", file=sys.stderr)
+        subprocess.run(command).check_returncode()
     except:
-        command = ' '.join(args)
-        print(f"Error while executing: '{command}'", file=sys.stderr)
+        print(f"Error while executing: '{command_str}'", file=sys.stderr)
         raise
 
 

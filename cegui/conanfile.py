@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from conans import ConanFile, CMake, tools
-from conans.model.version import Version
+from conan import ConanFile
+from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
+from conan.tools.files import get, replace_in_file, collect_libs, patch, copy
 import os
 import fnmatch
 
@@ -10,19 +11,13 @@ import fnmatch
 class CeguiConan(ConanFile):
     name = "cegui"
     version = "0.8.x-20200518"
-    url = "http://github.com/sixten-hilborn/conan-cegui"
-    description = "Crazy Eddie's GUI"
-    
+    url = "http://github.com/sixten-hilborn/conan-recipes"
+    homepage = "https://github.com/cegui/cegui"
+    description = "Crazy Eddie's GUI library is a versatile, fast, adjustable, multi-platform, C++ library for creating graphical user interfaces for games and rendering applications "
+
     # Indicates License type of the packaged library
     license = "https://opensource.org/licenses/mit-license.php"
 
-    # Packages the license for the conanfile.py
-    exports = ["LICENSE.md"]
-    
-    # Remove following lines if the target lib does not use cmake.
-    exports_sources = ["CMakeLists.txt", "patches*"]
-    generators = "cmake", "cmake_find_package"
-    
     # Options may need to change depending on the packaged library. 
     settings = "os", "arch", "compiler", "build_type"
     options = {
@@ -48,10 +43,6 @@ class CeguiConan(ConanFile):
         "build_static_factory_module": True,
     }
 
-    # Custom attributes for Bincrafters recipe conventions
-    source_subfolder = "source_subfolder"
-    build_subfolder = "build_subfolder"
-    
     # Use version ranges for dependencies unless there's a reason not to
     requires = (
         "freetype/2.11.1",
@@ -62,41 +53,70 @@ class CeguiConan(ConanFile):
 
     def configure(self):
         if self.options.shared:
-            self.options.remove("build_static_factory_module")
+            self.options.rm_safe("build_static_factory_module")
 
     def requirements(self):
+        #self.requires("zlib/1.2.12", override=True)
         if self.options.with_ogre:
             self.requires("ogre/1.11.6@sixten-hilborn/stable")
         if self.options.with_ois:
             self.requires("ois/1.5")
         if self.options.with_sdl:
-            self.requires("sdl/2.0.16")
+            self.requires("sdl/2.28.3")
             self.requires("sdl_image/2.0.5")
         else:
             self.requires("freeimage/3.18.0")
-            self.requires("zlib/1.2.11", override=True)
         if self.options.with_opengl or self.options.with_opengl3 or self.options.with_opengles:
-            self.requires("glew/2.2.0")
+            self.requires("glew/2.2.0", transitive_headers=True)
             self.requires("glm/0.9.9.8")
-            self.requires("glfw/3.3.2")
+            # self.requires("glfw/3.3.2")  # only used for samples, not needed for library
 
 
     def source(self):
         commit_id = 'c288602aa95affdab831468ba0a2b34fa1751a6a'
-        extracted_dir = self.name + "-" + commit_id
-        tools.get("https://github.com/cegui/cegui/archive/{0}.zip".format(commit_id))
+        get(self, f"https://github.com/cegui/cegui/archive/{commit_id}.zip", strip_root=True)
 
-        #Rename to "source_subfolder" is a convention to simplify later steps
-        os.rename(extracted_dir, self.source_subfolder)
+        self._apply_patches('patches', self.source_folder)
 
-        self._apply_patches('patches', self.source_subfolder)
+    def generate(self):
+        tc = CMakeToolchain(self)
+        tc.variables['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
+        tc.variables['CEGUI_SAMPLES_ENABLED'] = False
+        tc.variables['CEGUI_BUILD_PYTHON_MODULES'] = False
+        tc.variables['CEGUI_BUILD_APPLICATION_TEMPLATES'] = False
+        tc.variables['CEGUI_HAS_FREETYPE'] = True
+        tc.variables['CEGUI_OPTION_DEFAULT_IMAGECODEC'] = 'SDL2ImageCodec' if self.options.with_sdl else 'FreeImageImageCodec'
+        tc.variables['CEGUI_BUILD_IMAGECODEC_FREEIMAGE'] = not self.options.with_sdl
+        tc.variables['CEGUI_BUILD_IMAGECODEC_SDL2'] = self.options.with_sdl
+        tc.variables['CEGUI_BUILD_RENDERER_OGRE'] = self.options.with_ogre
+        tc.variables['CEGUI_BUILD_RENDERER_OPENGL'] = self.options.with_opengl
+        tc.variables['CEGUI_BUILD_RENDERER_OPENGL3'] = self.options.with_opengl3
+        tc.variables['CEGUI_BUILD_RENDERER_OPENGLES'] = self.options.with_opengles
+        if not self.options.shared:
+            tc.variables['CEGUI_BUILD_STATIC_CONFIGURATION'] = True
+            tc.variables['CEGUI_BUILD_STATIC_FACTORY_MODULE'] = self.options.build_static_factory_module
+        # Help CMake find the libxml2 library file
+        libxml2 = self.dependencies["libxml2"]
+        if libxml2.cpp_info.libs[0].endswith('_a'):
+            fileext = '.lib' if self.settings.os == 'Windows' else '.a'
+            tc.variables['LIBXML2_LIBRARIES'] = os.path.join(
+                libxml2.package_path,
+                libxml2.cpp_info.libdirs[0],
+                libxml2.cpp_info.libs[0]+fileext
+            ).replace('\\', '/')
+        # Help CMake find OGRE
+        if self.options.with_ogre:
+            tc.variables['OGRE_HOME'] = self.dependencies["ogre"].package_path.as_posix()
+        tc.generate()
 
+        deps = CMakeDeps(self)
+        deps.generate()
 
     def build(self):
         if not self.options.with_ois:
-            tools.replace_in_file('{0}/CMakeLists.txt'.format(self.source_subfolder), 'find_package(OIS)', '')
+            replace_in_file(self, f'{self.source_folder}/CMakeLists.txt', 'find_package(OIS)', '')
 
-        tools.replace_in_file('{0}/CMakeLists.txt'.format(self.source_subfolder), 'if(${OGRE_FOUND})', '''if(${OGRE_FOUND})
+        replace_in_file(self, f'{self.source_folder}/CMakeLists.txt', 'if(${OGRE_FOUND})', '''if(${OGRE_FOUND})
         if(NOT DEFINED CEGUI_FOUND_OGRE_VERSION_MAJOR)
             string(REPLACE "." ";" OGRE_VERSION_LIST ${OGRE_VERSION})
             list(GET OGRE_VERSION_LIST 0 CEGUI_FOUND_OGRE_VERSION_MAJOR)
@@ -104,76 +124,81 @@ class CeguiConan(ConanFile):
             list(GET OGRE_VERSION_LIST 2 CEGUI_FOUND_OGRE_VERSION_PATCH)
         endif()''')
 
-        tools.replace_in_file('{0}/CMakeLists.txt'.format(self.source_subfolder), 'if(NOT ${OGRE_FOUND})', '''if(NOT ${OGRE_FOUND})
+        replace_in_file(self, f'{self.source_folder}/CMakeLists.txt', 'if(NOT ${OGRE_FOUND})', '''if(NOT ${OGRE_FOUND})
             find_package(OGRE)
         endif()
         if(NOT ${OGRE_FOUND})''')
 
         # Remove VS snprintf workaround
-        if self.settings.compiler == 'Visual Studio' and int(str(self.settings.compiler.version)) >= 14:
-            tools.replace_in_file('{0}/cegui/include/CEGUI/PropertyHelper.h'.format(self.source_subfolder), '#define snprintf _snprintf', '')
+        if self.settings.compiler == 'msvc' and int(str(self.settings.compiler.version)) >= 14:
+            replace_in_file(self, f'{self.source_folder}/cegui/include/CEGUI/PropertyHelper.h', '#define snprintf _snprintf', '')
+
+        # Fix issue in FindOgre.cmake when temporary altering CMAKE_FIND_LIBRARY_PREFIXES
+        # causing find_library inside CMakeDeps-generated files to fail
+        replace_in_file(self, f'{self.source_folder}/cmake/FindOgre.cmake',
+            'set(TMP_CMAKE_LIB_PREFIX ${CMAKE_FIND_LIBRARY_PREFIXES})',
+            'set(TMP_CMAKE_LIB_PREFIX "${CMAKE_FIND_LIBRARY_PREFIXES}")'
+        )
+        replace_in_file(self, f'{self.source_folder}/cmake/FindOgre.cmake',
+            'set(CMAKE_FIND_LIBRARY_PREFIXES ${TMP_CMAKE_LIB_PREFIX})',
+            'set(CMAKE_FIND_LIBRARY_PREFIXES "${TMP_CMAKE_LIB_PREFIX}")'
+        )
+
+        # Fix casing for package names
+        self._patch_dependency_casing('cegui/src/ImageCodecModules/FreeImage/CMakeLists.txt', new_name='freeimage')
+        self._patch_dependency_casing('cegui/src/CMakeLists.txt', new_name='freetype')
+        self._patch_dependency_casing('cegui/src/ImageCodecModules/SDL2/CMakeLists.txt', old_name="SDL2IMAGE", new_name='SDL2_image')
+        self._patch_dependency_casing('cegui/src/RendererModules/OpenGL/CMakeLists.txt', new_name='glm')
+        self._patch_dependency_casing('cegui/src/RendererModules/OpenGL/CMakeLists.txt', new_name='glew')
 
         # Fix static build issue in Libxml2 module
-        tools.replace_in_file('{0}/cegui/include/CEGUI/XMLParserModules/Libxml2/XMLParser.h'.format(self.source_subfolder),
+        replace_in_file(self, f'{self.source_folder}/cegui/include/CEGUI/XMLParserModules/Libxml2/XMLParser.h',
             '#if defined( __WIN32__ ) || defined( _WIN32 )',
             '#if (defined( __WIN32__ ) || defined( _WIN32 )) && !defined(CEGUI_STATIC)')
 
         cmake = CMake(self)
-        cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
-        cmake.definitions['CEGUI_SAMPLES_ENABLED'] = False
-        cmake.definitions['CEGUI_BUILD_PYTHON_MODULES'] = False
-        cmake.definitions['CEGUI_BUILD_APPLICATION_TEMPLATES'] = False
-        cmake.definitions['CEGUI_HAS_FREETYPE'] = True
-        cmake.definitions['CEGUI_OPTION_DEFAULT_IMAGECODEC'] = 'SDL2ImageCodec' if self.options.with_sdl else 'FreeImageImageCodec'
-        cmake.definitions['CEGUI_BUILD_IMAGECODEC_FREEIMAGE'] = not self.options.with_sdl
-        cmake.definitions['CEGUI_BUILD_IMAGECODEC_SDL2'] = self.options.with_sdl
-        cmake.definitions['CEGUI_BUILD_RENDERER_OGRE'] = self.options.with_ogre
-        cmake.definitions['CEGUI_BUILD_RENDERER_OPENGL'] = self.options.with_opengl
-        cmake.definitions['CEGUI_BUILD_RENDERER_OPENGL3'] = self.options.with_opengl3
-        cmake.definitions['CEGUI_BUILD_RENDERER_OPENGLES'] = self.options.with_opengles
-        if not self.options.shared:
-            cmake.definitions['CEGUI_BUILD_STATIC_CONFIGURATION'] = True
-            cmake.definitions['CEGUI_BUILD_STATIC_FACTORY_MODULE'] = self.options.build_static_factory_module
-        # Help CMake find the libxml2 library file
-        if self.deps_cpp_info["libxml2"].libs[0].endswith('_a'):
-            fileext = '.lib' if self.settings.os == 'Windows' else '.a'
-            cmake.definitions['LIBXML2_LIBRARIES'] = os.path.join(self.deps_cpp_info["libxml2"].lib_paths[0], self.deps_cpp_info["libxml2"].libs[0]+fileext)
-        # Help CMake find OGRE
-        if self.options.with_ogre:
-            cmake.definitions['OGRE_HOME'] = self.deps_cpp_info["ogre"].rootpath
-
-        cmake.configure(build_folder=self.build_subfolder)
+        cmake.configure()
         cmake.build()
 
 
     def package(self):
         # If the CMakeLists.txt has a proper install method, the steps below may be redundant
         # If so, you can replace all the steps below with the word "pass"
-        self.copy(pattern="LICENSE")
-        self.copy(pattern="*", dst="include/CEGUI", src="{0}/cegui/include/CEGUI".format(self.source_subfolder))
-        self.copy(pattern="*", dst="include/CEGUI", src="{0}/{1}/cegui/include/CEGUI".format(self.build_subfolder, self.source_subfolder))
+        copy(self, pattern="LICENSE", dst=os.path.join(self.package_folder, "licenses"), src=self.source_folder)
+        copy(self, pattern="*", dst=os.path.join(self.package_folder, "include", "CEGUI"), src=os.path.join(self.source_folder, "cegui", "include", "CEGUI"))
+        copy(self, pattern="*", dst=os.path.join(self.package_folder, "include", "CEGUI"), src=os.path.join(self.build_folder, "cegui", "include", "CEGUI"))
         if self.options.shared:
-            self.copy(pattern="*.dll", dst="bin", src=self.build_subfolder, keep_path=False)
-            self.copy(pattern="*.lib", dst="lib", src=self.build_subfolder, keep_path=False)
-            self.copy(pattern="*.so*", dst="lib", src=self.build_subfolder, keep_path=False)
-            self.copy(pattern="*.dylib", dst="lib", src=self.build_subfolder, keep_path=False)
+            copy(self, pattern="*.dll", dst=os.path.join(self.package_folder, "bin"), src=self.build_folder, keep_path=False)
+            copy(self, pattern="*.lib", dst=os.path.join(self.package_folder, "lib"), src=self.build_folder, keep_path=False)
+            copy(self, pattern="*.so*", dst=os.path.join(self.package_folder, "lib"), src=self.build_folder, keep_path=False)
+            copy(self, pattern="*.dylib", dst=os.path.join(self.package_folder, "lib"), src=self.build_folder, keep_path=False)
         else:
-            self.copy(pattern="*.a", dst="lib", src=self.build_subfolder, keep_path=False)
-            self.copy(pattern="*_Static.lib", dst="lib", src=self.build_subfolder, keep_path=False)
+            copy(self, pattern="*.a", dst=os.path.join(self.package_folder, "lib"), src=self.build_folder, keep_path=False)
+            copy(self, pattern="*_Static.lib", dst=os.path.join(self.package_folder, "lib"), src=self.build_folder, keep_path=False)
 
 
     def package_info(self):
-        self.cpp_info.libs = tools.collect_libs(self)
+        self.cpp_info.libs = collect_libs(self)
         if not self.options.shared:
             self.cpp_info.defines.append('CEGUI_STATIC')
             if self.settings.os == 'Windows':
-                self.cpp_info.libs.append('Winmm')
+                self.cpp_info.system_libs.append('Winmm')
 
 
-    @staticmethod
-    def _apply_patches(source, dest):
+    def _apply_patches(self, source, dest):
         for root, _dirnames, filenames in os.walk(source):
             for filename in fnmatch.filter(filenames, '*.patch'):
                 patch_file = os.path.join(root, filename)
                 dest_path = os.path.join(dest, os.path.relpath(root, source))
-                tools.patch(base_path=dest_path, patch_file=patch_file)
+                patch(self, base_path=dest_path, patch_file=patch_file)
+
+
+    def _patch_dependency_casing(self, relative_file, new_name, old_name=None):
+        if old_name is None:
+            old_name = new_name.upper()
+        target = '${CEGUI_TARGET_NAME}'
+        replace_in_file(self, f'{self.source_folder}/{relative_file}',
+            f'cegui_add_dependency({target} {old_name}',
+            f'cegui_add_dependency({target} {new_name}'
+        )
+
