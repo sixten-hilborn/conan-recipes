@@ -1,30 +1,24 @@
-from conans import ConanFile, CMake, tools
-from conans.errors import ConanInvalidConfiguration
+from conan import ConanFile
+from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
+from conan.tools.files import get, replace_in_file, patch, copy, rmdir
+from conan.tools.system.package_manager import Apt
+from conan.errors import ConanInvalidConfiguration
 import os
 import fnmatch
-import glob
 
 
-def apply_patches(source, dest):
+def apply_patches(conanfile, source, dest):
     for root, _dirnames, filenames in os.walk(source):
         for filename in fnmatch.filter(filenames, '*.patch'):
             patch_file = os.path.join(root, filename)
             dest_path = os.path.join(dest, os.path.relpath(root, source))
-            tools.patch(base_path=dest_path, patch_file=patch_file)
-
-
-def rename(pattern, name):
-    for extracted in glob.glob(pattern):
-        os.rename(extracted, name)
+            patch(conanfile, base_path=dest_path, patch_file=patch_file)
 
 
 class OgreConan(ConanFile):
     name = "ogre"
     version = "1.11.6"
     description = "Open Source 3D Graphics Engine"
-    folder = 'ogre-v' + version
-    install_path = os.path.join('_build', folder, 'sdk')
-    generators = "cmake"
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
@@ -53,7 +47,7 @@ class OgreConan(ConanFile):
     }
     default_options = {
         "shared": True,
-        "freetype:shared": False,
+        "freetype/*:shared": False,
         "with_rendersystem_gl3plus": True,
         "with_rendersystem_gl": True,
         "with_rendersystem_gles2": False,
@@ -78,9 +72,10 @@ class OgreConan(ConanFile):
     exports_sources = ['patches*']
     requires = (
         "freeimage/3.18.0",
-        "zlib/1.2.11"
+        "zlib/1.2.12"
     )
-    url = "http://github.com/sixten-hilborn/conan-ogre"
+    url = "http://github.com/sixten-hilborn/conan-recipes"
+    homepage = "https://github.com/OGRECave/ogre"
     license = "https://opensource.org/licenses/mit-license.php"
 
     short_paths = True
@@ -101,6 +96,8 @@ class OgreConan(ConanFile):
             self.options.with_plugin_cg = False
 
     def requirements(self):
+        self.requires("jasper/4.2.0", override=True)  # fixes msvc build error
+
         if self.options.with_plugin_cg:
             self.requires("cg/3.1@sixten-hilborn/stable")
         if self.options.with_component_overlay:
@@ -117,115 +114,145 @@ class OgreConan(ConanFile):
 
     def build_requirements(self):
         if self.settings.os == 'Linux':
-            installer = tools.SystemPackageTool(conanfile=self)
+            packages = []
             if self._with_opengl():
-                installer.install('libgl1-mesa-dev')
-                installer.install('libglu1-mesa-dev')
+                packages.extend([
+                    'libgl1-mesa-dev',
+                    'libglu1-mesa-dev',
+                ])
             if self.options.with_rendersystem_gles2:
-                installer.install('libgles2-mesa-dev')
+                packages.append('libgles2-mesa-dev')
+            Apt(self).install(packages)
 
     def system_requirements(self):
         if self.settings.os == 'Linux':
-            installer = tools.SystemPackageTool(conanfile=self)
-            installer.install("libxmu-dev")
-            installer.install("libxaw7-dev")
-            installer.install("libxt-dev")
-            installer.install("libxrandr-dev")
+            Apt(self).install([
+                'libxmu-dev',
+                'libxaw7-dev',
+                'libxt-dev',
+                'libxrandr-dev',
+            ])
 
     def source(self):
-        tools.get("https://github.com/OGRECave/ogre/archive/v{0}.zip".format(self.version), sha256='43395e72e5c8c1cc7048ae187c57c02eb2a6b52efa1c584f84b000267e6e315b')
-        rename('ogre-*', self.folder)
+        get(self,
+            "https://github.com/OGRECave/ogre/archive/v{0}.zip".format(self.version),
+            sha256='43395e72e5c8c1cc7048ae187c57c02eb2a6b52efa1c584f84b000267e6e315b',
+            strip_root=True,
+        )
+
+    def generate(self):
+        tc = CMakeToolchain(self)
+        tc.variables['CMAKE_POSITION_INDEPENDENT_CODE'] = True
+        tc.variables['OGRE_STATIC'] = not self.options.shared
+        tc.variables['OGRE_COPY_DEPENDENCIES'] = False
+        # tc.variables['OGRE_UNITY_BUILD'] = True  # Speed up build
+        tc.variables['OGRE_BUILD_DEPENDENCIES'] = False  # Dependencies should be handled via Conan instead :)
+        tc.variables['OGRE_BUILD_SAMPLES'] = False
+        tc.variables['OGRE_BUILD_TESTS'] = False
+        tc.variables['OGRE_BUILD_TOOLS'] = False
+        tc.variables['OGRE_INSTALL_PDB'] = False
+        tc.variables['OGRE_BUILD_RENDERSYSTEM_D3D9'] = self.options.with_rendersystem_d3d9
+        tc.variables['OGRE_BUILD_RENDERSYSTEM_D3D11'] = self.options.with_rendersystem_d3d11
+        tc.variables['OGRE_BUILD_RENDERSYSTEM_GL3PLUS'] = self.options.with_rendersystem_gl3plus
+        tc.variables['OGRE_BUILD_RENDERSYSTEM_GL'] = self.options.with_rendersystem_gl
+        tc.variables['OGRE_BUILD_RENDERSYSTEM_GLES2'] = self.options.with_rendersystem_gles2
+        tc.variables['OGRE_BUILD_PLUGIN_BSP'] = self.options.with_plugin_bsp
+        tc.variables['OGRE_BUILD_PLUGIN_OCTREE'] = self.options.with_plugin_octree
+        tc.variables['OGRE_BUILD_PLUGIN_PFX'] = self.options.with_plugin_pfx
+        tc.variables['OGRE_BUILD_PLUGIN_PCZ'] = self.options.with_plugin_pcz
+        tc.variables['OGRE_BUILD_PLUGIN_CG'] = self.options.with_plugin_cg
+        tc.variables['OGRE_BUILD_COMPONENT_PAGING'] = self.options.with_component_paging
+        tc.variables['OGRE_BUILD_COMPONENT_MESHLODGENERATOR'] = self.options.with_component_meshlodgenerator
+        tc.variables['OGRE_BUILD_COMPONENT_TERRAIN'] = self.options.with_component_terrain
+        tc.variables['OGRE_BUILD_COMPONENT_VOLUME'] = self.options.with_component_volume
+        tc.variables['OGRE_BUILD_COMPONENT_PROPERTY'] = self.options.with_component_property
+        tc.variables['OGRE_BUILD_COMPONENT_OVERLAY'] = self.options.with_component_overlay
+        tc.variables['OGRE_BUILD_COMPONENT_HLMS'] = self.options.with_component_hlms
+        tc.variables['OGRE_BUILD_COMPONENT_BITES'] = self.options.with_component_bites
+        tc.variables['OGRE_BUILD_COMPONENT_PYTHON'] = self.options.with_component_python
+        tc.variables['OGRE_BUILD_COMPONENT_JAVA'] = self.options.with_component_java
+        tc.variables['OGRE_BUILD_COMPONENT_CSHARP'] = self.options.with_component_csharp
+        tc.variables['OGRE_BUILD_COMPONENT_RTSHADERSYSTEM'] = self.options.with_component_rtshadersystem
+        if self.settings.compiler == 'msvc':
+            tc.variables['OGRE_CONFIG_STATIC_LINK_CRT'] = str(self.settings.compiler.runtime).startswith('MT')
+        tc.generate()
+
+        deps = CMakeDeps(self)
+        deps.generate()
 
     def build(self):
-        apply_patches('patches', self.folder)
-        tools.replace_in_file(
-            '{0}/OgreMain/CMakeLists.txt'.format(self.folder),
-            '${ZZip_LIBRARIES}',
-            'CONAN_PKG::zlib')
-        tools.replace_in_file(
-            '{0}/OgreMain/CMakeLists.txt'.format(self.folder),
-            'list(APPEND LIBRARIES ZLIB::ZLIB)',
-            '')
-        tools.replace_in_file(
-            '{0}/Components/Overlay/CMakeLists.txt'.format(self.folder),
+        apply_patches(self, 'patches', self.source_folder)
+        #replace_in_file(
+        #    self,
+        #    f'{self.source_folder}/OgreMain/CMakeLists.txt',
+        #    '${ZZip_LIBRARIES}',
+        #    'ZLIB::ZLIB')
+        #replace_in_file(
+        #    self,
+        #    f'{self.source_folder}/OgreMain/CMakeLists.txt',
+        #    'list(APPEND LIBRARIES ZLIB::ZLIB)',
+        #    '')
+        replace_in_file(
+            self,
+            f'{self.source_folder}/Components/Overlay/CMakeLists.txt',
             '${FREETYPE_LIBRARIES}',
-            'CONAN_PKG::freetype')
-        tools.replace_in_file(
-            '{0}/Components/Overlay/CMakeLists.txt'.format(self.folder),
-            'ZLIB::ZLIB',
-            'CONAN_PKG::zlib')
-        tools.replace_in_file(
-            '{0}/PlugIns/FreeImageCodec/CMakeLists.txt'.format(self.folder),
+            'Freetype::Freetype')
+        #replace_in_file(
+        #    self,
+        #    f'{self.source_folder}/Components/Overlay/CMakeLists.txt',
+        #    'ZLIB::ZLIB',
+        #    'CONAN_PKG::zlib')
+        replace_in_file(
+            self,
+            f'{self.source_folder}/PlugIns/FreeImageCodec/CMakeLists.txt',
             '${FreeImage_LIBRARIES}',
-            'CONAN_PKG::freeimage')
-        tools.replace_in_file(
-            '{0}/Samples/CMakeLists.txt'.format(self.folder),
+            'freeimage::freeimage')
+        replace_in_file(
+            self,
+            f'{self.source_folder}/Samples/CMakeLists.txt',
             'if (MSVC)',
             'if (MSVC AND OGRE_BUILD_SAMPLES)')
 
         # Fix for static build without DirectX 9
         if not self.options.with_rendersystem_d3d9:
-            tools.replace_in_file('{0}/Components/Bites/CMakeLists.txt'.format(self.folder), ' ${DirectX9_INCLUDE_DIR}', '')
+            replace_in_file(self, f'{self.source_folder}/Components/Bites/CMakeLists.txt', ' ${DirectX9_INCLUDE_DIR}', '')
 
-        #tools.replace_in_file('{0}/PlugIns/CgProgramManager/include/OgreCgPlugin.h'.format(self.folder), '#include "OgrePlugin.h"', '#include <OGRE/OgrePlugin.h>')
+        #replace_in_file(f'{self.source_folder}/PlugIns/CgProgramManager/include/OgreCgPlugin.h', '#include "OgrePlugin.h"', '#include <OGRE/OgrePlugin.h>')
 
         cmake = CMake(self)
-        cmake.definitions['CMAKE_INSTALL_PREFIX'] = os.path.join(os.getcwd(), self.install_path)
-        cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = True
-        cmake.definitions['OGRE_STATIC'] = not self.options.shared
-        cmake.definitions['OGRE_COPY_DEPENDENCIES'] = False
-        # cmake.definitions['OGRE_UNITY_BUILD'] = True  # Speed up build
-        cmake.definitions['OGRE_BUILD_DEPENDENCIES'] = False  # Dependencies should be handled via Conan instead :)
-        cmake.definitions['OGRE_BUILD_SAMPLES'] = False
-        cmake.definitions['OGRE_BUILD_TESTS'] = False
-        cmake.definitions['OGRE_BUILD_TOOLS'] = False
-        cmake.definitions['OGRE_INSTALL_PDB'] = False
-        cmake.definitions['OGRE_BUILD_RENDERSYSTEM_D3D9'] = self.options.with_rendersystem_d3d9
-        cmake.definitions['OGRE_BUILD_RENDERSYSTEM_D3D11'] = self.options.with_rendersystem_d3d11
-        cmake.definitions['OGRE_BUILD_RENDERSYSTEM_GL3PLUS'] = self.options.with_rendersystem_gl3plus
-        cmake.definitions['OGRE_BUILD_RENDERSYSTEM_GL'] = self.options.with_rendersystem_gl
-        cmake.definitions['OGRE_BUILD_RENDERSYSTEM_GLES2'] = self.options.with_rendersystem_gles2
-        cmake.definitions['OGRE_BUILD_PLUGIN_BSP'] = self.options.with_plugin_bsp
-        cmake.definitions['OGRE_BUILD_PLUGIN_OCTREE'] = self.options.with_plugin_octree
-        cmake.definitions['OGRE_BUILD_PLUGIN_PFX'] = self.options.with_plugin_pfx
-        cmake.definitions['OGRE_BUILD_PLUGIN_PCZ'] = self.options.with_plugin_pcz
-        cmake.definitions['OGRE_BUILD_PLUGIN_CG'] = self.options.with_plugin_cg
-        cmake.definitions['OGRE_BUILD_COMPONENT_PAGING'] = self.options.with_component_paging
-        cmake.definitions['OGRE_BUILD_COMPONENT_MESHLODGENERATOR'] = self.options.with_component_meshlodgenerator
-        cmake.definitions['OGRE_BUILD_COMPONENT_TERRAIN'] = self.options.with_component_terrain
-        cmake.definitions['OGRE_BUILD_COMPONENT_VOLUME'] = self.options.with_component_volume
-        cmake.definitions['OGRE_BUILD_COMPONENT_PROPERTY'] = self.options.with_component_property
-        cmake.definitions['OGRE_BUILD_COMPONENT_OVERLAY'] = self.options.with_component_overlay
-        cmake.definitions['OGRE_BUILD_COMPONENT_HLMS'] = self.options.with_component_hlms
-        cmake.definitions['OGRE_BUILD_COMPONENT_BITES'] = self.options.with_component_bites
-        cmake.definitions['OGRE_BUILD_COMPONENT_PYTHON'] = self.options.with_component_python
-        cmake.definitions['OGRE_BUILD_COMPONENT_JAVA'] = self.options.with_component_java
-        cmake.definitions['OGRE_BUILD_COMPONENT_CSHARP'] = self.options.with_component_csharp
-        cmake.definitions['OGRE_BUILD_COMPONENT_RTSHADERSYSTEM'] = self.options.with_component_rtshadersystem
-        if self.settings.compiler == 'Visual Studio':
-            cmake.definitions['OGRE_CONFIG_STATIC_LINK_CRT'] = str(self.settings.compiler.runtime).startswith('MT')
-        cmake.configure(build_folder='_build', source_folder=self.folder)
-        cmake.build(target='install')
+        cmake.configure()
+        cmake.build()
 
     def package(self):
-        sdk_dir = self.install_path
-        include_dir = os.path.join(sdk_dir, 'include', 'OGRE')
-        lib_dir = os.path.join(sdk_dir, 'lib')
-        bin_dir = os.path.join(sdk_dir, 'bin')
-        self.copy(pattern="*.h", dst="include/OGRE", src=include_dir)
-        self.copy("*.lib", dst="lib", src=lib_dir, keep_path=False)
-        self.copy("*.a", dst="lib", src=lib_dir, keep_path=False)
-        self.copy("*.so*", dst="lib", src=lib_dir, keep_path=False, links=True)
-        self.copy("*.dylib", dst="lib", src=lib_dir, keep_path=False)
-        self.copy("*.dll", dst="bin", src=bin_dir, keep_path=False)
-        # Copy resource file for Windows dialogs
-        if not self.options.shared and self.settings.os == 'Windows':
-            self.copy("*.res", dst="res", src='_build/Components/Bites', keep_path=False)
+        cmake = CMake(self)
+        cmake.install()
+        rmdir(self, os.path.join(self.package_folder, "lib", "pkgconfig"))
+        rmdir(self, os.path.join(self.package_folder, "lib", "share"))
+        rmdir(self, os.path.join(self.package_folder, "lib", "OGRE", "cmake"))
+        rmdir(self, os.path.join(self.package_folder, "share"))
+        rmdir(self, os.path.join(self.package_folder, "CMake"))
+        rmdir(self, os.path.join(self.package_folder, "media"))
+
+
+        #sdk_dir = os.path.join(self.build_folder, "_install")
+        #cmake = CMake(self)
+        #cmake.install(['--prefix', sdk_dir])
+        #include_dir = os.path.join(sdk_dir, 'include', 'OGRE')
+        #lib_dir = os.path.join(sdk_dir, 'lib')
+        #bin_dir = os.path.join(sdk_dir, 'bin')
+        #copy(self, pattern="*.h", dst=os.path.join(self.package_folder, "include/OGRE"), src=include_dir)
+        #copy(self, "*.lib", dst=os.path.join(self.package_folder, "lib"), src=lib_dir, keep_path=False)
+        #copy(self, "*.a", dst=os.path.join(self.package_folder, "lib"), src=lib_dir, keep_path=False)
+        #copy(self, "*.so*", dst=os.path.join(self.package_folder, "lib"), src=lib_dir, keep_path=False, links=True)
+        #copy(self, "*.dylib", dst=os.path.join(self.package_folder, "lib"), src=lib_dir, keep_path=False)
+        #copy(self, "*.dll", dst=os.path.join(self.package_folder, "bin"), src=bin_dir, keep_path=False)
+        ## Copy resource file for Windows dialogs
+        #if not self.options.shared and self.settings.os == 'Windows':
+        #    copy(self, "*.res", dst=os.path.join(self.package_folder, "res"), src='_build/Components/Bites', keep_path=False)
 
     def package_info(self):
         self.cpp_info.set_property("cmake_file_name", "OGRE")
-        self.cpp_info.names["cmake_find_package"] = "OGRE"
-        self.cpp_info.names["cmake_find_package_multi"] = "OGRE"
+        self.cpp_info.set_property("cmake_target_name", "OGRE::OGRE")
 
         # Unfortunately some headers assumes the OGRE directory is an include path
         self.cpp_info.includedirs.append('include/OGRE')
@@ -291,9 +318,9 @@ class OgreConan(ConanFile):
             self.cpp_info.exelinkflags = self.cpp_info.sharedlinkflags
 
         if self.settings.os == 'Linux':
-            self.cpp_info.libs.append('rt')
+            self.cpp_info.system_libs.append('rt')
             if not self.options.shared:
-                self.cpp_info.libs.append('dl')
+                self.cpp_info.system_libs.append('dl')
 
     def _with_opengl(self):
         return self.options.with_rendersystem_gl or self.options.with_rendersystem_gl3plus

@@ -1,13 +1,7 @@
-PROJECT(TestCg)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.15)
+project(test_package)
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-CONAN_BASIC_SETUP()
+find_package(Cg REQUIRED CONFIG)
 
-SET(VERBOSE 1)
-SET(CMAKE_VERBOSE_MAKEFILE 1)
-SET(CMAKE_SKIP_RPATH 0)
-
-ADD_EXECUTABLE(example example.c)
-target_link_libraries(example ${CONAN_LIBS})
-
+add_executable(${PROJECT_NAME} test_package.c)
+target_link_libraries(${PROJECT_NAME} PRIVATE Cg::Cg)

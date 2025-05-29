@@ -1,12 +1,7 @@
-PROJECT(TestOGRE)
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.15)
+project(test_package)
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-CONAN_BASIC_SETUP()
+find_package(OGRE REQUIRED CONFIG)
 
-SET(VERBOSE 1)
-SET(CMAKE_VERBOSE_MAKEFILE 1)
-
-ADD_EXECUTABLE(example example.cpp)
-target_link_libraries(example ${CONAN_LIBS})
-target_compile_features(example PRIVATE cxx_lambdas)
+add_executable(${PROJECT_NAME} example.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE OGRE::OGRE)

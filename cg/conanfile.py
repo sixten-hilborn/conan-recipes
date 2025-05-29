@@ -1,4 +1,7 @@
-from conans import ConanFile, tools
+from conan import ConanFile
+from conan.tools.files import get, download, copy
+from conan.tools.system.package_manager import Apt
+from conan.errors import ConanInvalidConfiguration
 import os
 import shutil
 
@@ -7,28 +10,37 @@ class CgConan(ConanFile):
     name = "cg"
     description = "NVIDIA Cg Toolkit"
     version = "3.1"
-    generators = "cmake"
-    settings = {"os": ["Linux", "Macos", "Windows"], "arch": ["x86", "x86_64"]}
-    url = "http://github.com/sixten-hilborn/conan-cg"
+    settings = "os", "arch"
+    url = "http://github.com/sixten-hilborn/conan-recipes"
     license = "https://bitbucket.org/cabalistic/ogredeps/src/bfc878e4fd9a3e026de73114cf42abe2787461b8/src/Cg/license.txt"
-    exports = ["install_mac.sh"]
+    exports_sources = ["install_mac.sh"]
+
+    options = {
+        "shared": [True],
+    }
+    default_options = {
+        "shared": True,
+    }
+
+    def validate(self):
+        if self.settings.os not in ["Linux", "Macos", "Windows"]:
+            raise ConanInvalidConfiguration(f"OS {self.settings.os} not supported")
+        if self.settings.arch not in ["x86", "x86_64"]:
+            raise ConanInvalidConfiguration(f"Arch {self.settings.arch} not supported")
 
     def system_requirements(self):
         if self.settings.os == "Linux":
-            installer = tools.SystemPackageTool()
-            # installer.install("nvidia-cg-toolkit")
-            if (
-                tools.os_info.linux_distro == "ubuntu"
-                and tools.os_info.os_version <= "22.04"
-            ):
-                freeglut_lib = "freeglut3"
-            else:
-                freeglut_lib = "libglut3.12"
+            ## installer.install("nvidia-cg-toolkit")
+            #if (
+            #    tools.os_info.linux_distro == "ubuntu"
+            #    and tools.os_info.os_version <= "22.04"
+            #):
+            #    freeglut_lib = "freeglut3"
+            #else:
+            #    freeglut_lib = "libglut3.12"
+            freeglut_lib = "libglut3.12"
 
-            arch_suffix = "i386" if self.settings.arch == "x86" else "amd64"
-
-            installer.install(f"libc6:{arch_suffix}")
-            installer.install(f"{freeglut_lib}:{arch_suffix}")
+            Apt(self).install(["libc6", freeglut_lib])
 
     def source(self):
         pass
@@ -43,22 +55,17 @@ class CgConan(ConanFile):
 
     def source_linux(self):
         if self.settings.arch == "x86":
-            tools.get(
-                "http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86.tgz"
-            )
+            get(self, "http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86.tgz")
         elif self.settings.arch == "x86_64":
-            tools.get(
-                "http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86_64.tgz"
-            )
+            get(self, "http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012_x86_64.tgz")
         shutil.rmtree("usr/local")
 
     def source_windows(self):
         def get_cg(path, sha256):
             filename = os.path.basename(path)
-            tools.download(
-                "https://raw.githubusercontent.com/AnotherFoxGuy/cg-toolkit/master/{0}".format(
-                    path
-                ),
+            download(
+                self,
+                f"https://raw.githubusercontent.com/AnotherFoxGuy/cg-toolkit/master/{path}",
                 filename,
                 sha256=sha256,
             )
@@ -87,23 +94,25 @@ class CgConan(ConanFile):
             )
 
     def source_mac(self):
-        tools.download(
+        download(
+            self,
             "http://developer.download.nvidia.com/cg/Cg_3.1/Cg-3.1_April2012.dmg",
             "Cg.dmg",
         )
         self.run("bash -ex ./install_mac.sh")
 
     def package(self):
-        self.copy(pattern="*.h", dst="include/Cg", keep_path=False)
-        self.copy("*.lib", dst="lib", keep_path=False)
-        self.copy("*.a", dst="lib", keep_path=False)
-        self.copy("*.so*", dst="lib", keep_path=False, links=True)
-        self.copy("*.dylib", dst="lib", keep_path=False)
-        self.copy("*.dll", dst="bin", keep_path=False)
+        copy(self, pattern="*.h", dst=os.path.join(self.package_folder, "include", "Cg"), src=self.build_folder, keep_path=False)
+        copy(self, "*.lib", dst=os.path.join(self.package_folder, "lib"), src=self.build_folder, keep_path=False)
+        copy(self, "*.a", dst=os.path.join(self.package_folder, "lib"), src=self.build_folder, keep_path=False)
+        copy(self, "*.so*", dst=os.path.join(self.package_folder, "lib"), src=self.build_folder, keep_path=False)
+        copy(self, "*.dylib", dst=os.path.join(self.package_folder, "lib"), src=self.build_folder, keep_path=False)
+        copy(self, "*.dll", dst=os.path.join(self.package_folder, "bin"), src=self.build_folder, keep_path=False)
         if self.settings.os == "Macos":
-            self.copy(
+            copy(
+                self,
                 pattern="*.h",
-                dst="include/Cg",
+                dst=os.path.join(self.package_folder, "include", "Cg"),
                 src="/Library/Frameworks/Cg.framework/Versions/1.0/Headers",
                 keep_path=False,
             )
@@ -115,3 +124,5 @@ class CgConan(ConanFile):
             self.cpp_info.sharedlinkflags = self.cpp_info.exelinkflags
         else:
             self.cpp_info.libs = ["Cg"]
+        self.cpp_info.set_property("cmake_file_name", "Cg")
+        self.cpp_info.set_property("cmake_target_name", "Cg::Cg")

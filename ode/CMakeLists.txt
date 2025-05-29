@@ -1,7 +1,5 @@
-PROJECT(ode)
-cmake_minimum_required(VERSION 2.8)
-include(../conanbuildinfo.cmake)
-CONAN_BASIC_SETUP()
+cmake_minimum_required(VERSION 3.15)
+project(ode)
 
 option(USE_DOUBLE_PRECISION "On for double precision, off for single precision" OFF)
 
