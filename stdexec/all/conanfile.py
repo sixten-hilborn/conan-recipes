@@ -1,5 +1,6 @@
 from conan import ConanFile
-from conan.tools.files import get, copy
+from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
+from conan.tools.files import get, copy, replace_in_file
 from conan.tools.build import check_min_cppstd
 
 
@@ -11,8 +12,14 @@ class StdexecRecipe(ConanFile):
     homepage = "https://github.com/NVIDIA/stdexec"
     url = "https://github.com/sixten-hilborn/conan-recipes"
     license = "Apache 2.0"
-    settings = "compiler", "os"  # Header only - compiler and os only used for flags
+    settings = "os", "arch", "compiler", "build_type"
     package_type = "header-library"
+    options = {
+        "asio": [None, "boost", "standalone"],
+    }
+    default_options = {
+        "asio": None,
+    }
 
     def validate(self):
         if self.settings.compiler.get_safe("cppstd"):
@@ -20,10 +27,11 @@ class StdexecRecipe(ConanFile):
 
     def package_id(self):
         # header only
-        self.info.clear()
+        self.info.settings.clear()
 
     def build_requirements(self):
-        self.test_requires("catch2/2.13.10")
+        #self.test_requires("catch2/2.13.10")
+        pass
 
     def source(self):
         get(
@@ -32,6 +40,21 @@ class StdexecRecipe(ConanFile):
             destination=self.source_folder,
             strip_root=True
         )
+
+    def generate(self):
+        tc = CMakeToolchain(self)
+        tc.variables["STDEXEC_BUILD_TESTS"] = False
+        if self.options.asio:
+            tc.variables["STDEXEC_ENABLE_ASIO"] = True
+            tc.variables["STDEXEC_ASIO_IMPLEMENTATION"] = self.options.asio
+        tc.generate()
+
+        deps = CMakeDeps(self)
+        deps.generate()
+
+    def build(self):
+        cmake = CMake(self)
+        cmake.configure()
 
     def package(self):
         copy(self, "*.hpp", dst=f"{self.package_folder}/include", src=f"{self.source_folder}/include")
