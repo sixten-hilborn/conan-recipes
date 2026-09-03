@@ -88,6 +88,7 @@ class CeguiConan(ConanFile):
         tc.variables['CEGUI_OPTION_DEFAULT_IMAGECODEC'] = 'SDL2ImageCodec' if self.options.with_sdl else 'FreeImageImageCodec'
         tc.variables['CEGUI_BUILD_IMAGECODEC_FREEIMAGE'] = not self.options.with_sdl
         tc.variables['CEGUI_BUILD_IMAGECODEC_SDL2'] = self.options.with_sdl
+        tc.variables['CEGUI_BUILD_RENDERER_NULL'] = True
         tc.variables['CEGUI_BUILD_RENDERER_OGRE'] = self.options.with_ogre
         tc.variables['CEGUI_BUILD_RENDERER_OPENGL'] = self.options.with_opengl
         tc.variables['CEGUI_BUILD_RENDERER_OPENGL3'] = self.options.with_opengl3
