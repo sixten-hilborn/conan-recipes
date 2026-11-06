@@ -56,7 +56,7 @@ def parse_args():
 
 def load_config(path):
     with open(f'{path}/config.yml') as conf_file:
-        config = yaml.load(conf_file, Loader=yaml.CLoader)
+        config = yaml.safe_load(conf_file)
     packages = []
     versions = config['versions']
     for version, conf in versions.items():
